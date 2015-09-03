@@ -1,0 +1,861 @@
+#include "Chess.h"
+
+moves error_moves = { -1, 0, 0 };
+cord error_cord = { -1, -1 };
+
+char all_pieces[7] = "mbnrqk";
+
+
+int main2(settings * set){
+	while (TRUE) {
+		computer_turn(set);
+		set->next = other_player(set->next);
+	}
+}
+
+/***************/
+/**** board ****/
+/***************/
+
+// initialize board to start positions
+void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
+	clear(board);
+	int i;
+	for (i = 0; i < BOARD_SIZE; i++){  //set pawns
+		board[i][1] = WHITE_P;
+		board[i][6] = BLACK_P;
+	}
+	board[0][0] = board[7][0] = WHITE_R;
+	board[0][7] = board[7][7] = BLACK_R;
+	board[1][0] = board[6][0] = WHITE_N;
+	board[1][7] = board[6][7] = BLACK_N;
+	board[2][0] = board[5][0] = WHITE_B;
+	board[2][7] = board[5][7] = BLACK_B;
+	board[3][0] = WHITE_Q;
+	board[3][7] = BLACK_Q;
+	board[4][0] = WHITE_K;
+	board[4][7] = BLACK_K;
+}
+
+
+
+//clear board of pieces
+void clear(char board[BOARD_SIZE][BOARD_SIZE]) {
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++){
+		for (j = 0; j < BOARD_SIZE; j++){
+			board[i][j] = EMPTY;
+		}
+	}
+}
+
+//check if board is valid for starting the game
+int is_valid_board(char board[BOARD_SIZE][BOARD_SIZE]) {
+	return ((piece_count(board, WHITE_K) == 1) &&
+		(piece_count(board, BLACK_K) == 1));
+}
+// piece count
+int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
+	int count = 0;
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			if (piece == board[i][j])
+				count++;
+		}
+	}
+	return count;
+}
+
+
+//check there are no more than allowed pieces of each type
+int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
+	char piece_type = tolower(piece);
+	int count = piece_count(board, piece);
+	switch (piece_type)
+	{
+	case PAWN:
+		return (count > 8);
+	case KING:
+		return (count > 1);
+	case QUEEN:
+		return (count > 1);
+	default: //rest of the pieces
+		return (count > 2);
+	}
+}
+
+// copy original bord content to copy board
+void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOARD_SIZE]) {
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			copy[i][j] = original[i][j];
+		}
+	}
+}
+
+
+/************************/
+/* coordinates & pieces */
+/************************/
+
+//check if cordinate is valid
+int is_valid_cord(cord c) {
+	if ((c.x >= 0) && (c.x < BOARD_SIZE) &&	// x coordinate is within board
+		(c.y >= 0) && (c.y < BOARD_SIZE))// y coordinate is within board
+		return TRUE;
+	else
+		return FALSE;
+}
+
+//add a piece to given coordinate on board
+void add_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece, int color, char type) {
+	char to_add;
+	if (color == WHITE) {
+		to_add = type;
+	}
+	else //color is black
+		to_add = type - 'a' + 'A';
+	board_piece(board, piece) = to_add;
+}
+
+//return the color of a piece or -1 if square is empty
+int which_color(char piece) {
+	if (piece == EMPTY)
+		return -1; //epmty square
+	else if (isupper(piece)) {
+		return BLACK;
+	}
+	else
+		return WHITE;
+}
+
+/****************/
+/***** move *****/
+/****************/
+
+//copy a single move
+void copy_move(move * original_move, move* new_copy){
+	new_copy->start = original_move->start;
+	new_copy->end = original_move->end;
+	new_copy->promotion = original_move->promotion;
+	board_copy(original_move->board, new_copy->board);
+}
+
+/*
+* check if a move is valid (is it one of the possible moves)
+* if move is valid, return its index in all_vaild_moves. else, return -1.
+* start = first coordinate of the move
+* steps_len = no. of total steps in move
+* steps = all coordinate the move passes through
+*/
+int is_valid_move(moves all_valid_moves, move new_move){
+	move_node* curr_node = all_valid_moves.first;
+	move * curr_move;
+	cord start = new_move.start;
+	cord end = new_move.end;
+	for (unsigned i = 0; i < all_valid_moves.len; i++){
+		curr_move = curr_node->data;
+		if (DEBUG && curr_move->promotion) {
+			printf("MY PROMOTION: %c Vs. THEIR PRO: %c\n", board_piece(curr_move->board, end), board_piece(new_move.board, end));
+		}
+		if ((is_same_cord(curr_move->start, start)) &&
+			(is_same_cord(curr_move->end, end)) &&
+			(((!new_move.promotion) ||												//this is not a promotion, or
+			board_piece(curr_move->board, end) == board_piece(new_move.board, end)))) //it's the same promotion
+					return i;
+		curr_node = curr_node->next;
+	}
+	return -1;
+}
+
+
+int load_game(char * path, settings * game_settings){
+	FILE * fp;
+	mxml_node_t *xml_tree;
+	mxml_node_t *xml_node;
+	char row_node[17] = "game/board/row_x";
+	const char * row;
+	cord c;
+	fp = fopen(path, "r");
+	if (fp == NULL)
+		return FALSE;
+	else {
+		xml_tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
+	fclose(fp);
+	
+	xml_node = mxmlFindPath(xml_tree, "game/next_turn");
+	game_settings->next = (xml_node == NULL) ? WHITE : string_to_color(mxmlGetOpaque(xml_node));
+
+	xml_node = mxmlFindPath(xml_tree, "game/game_mode");
+	game_settings->mode = (xml_node == NULL) ? PLAYER_VS_COMP : atoi(mxmlGetOpaque(xml_node));
+
+	if (game_settings->mode == PLAYER_VS_COMP){
+		xml_node = mxmlFindPath(xml_tree, "game/difficulty");
+		game_settings->minimax_depth = (xml_node == NULL) ? 1 : atoi(mxmlGetOpaque(xml_node));
+
+		xml_node = mxmlFindPath(xml_tree, "game/user_color");
+		game_settings->color = (xml_node == NULL) ? WHITE : string_to_color(mxmlGetOpaque(xml_node));
+	}
+
+	for (int y = 8; y > 0; y--) {
+		row_node[15] = '0' + y;
+		xml_node = mxmlFindPath(xml_tree, row_node);
+		row = mxmlGetOpaque(xml_node);
+		for (int x = 0; x < 8; x++) {
+			c.x = x;
+			c.y = y - 1;
+			board_piece(game_settings->board, c) = (row[x] == '_') ? EMPTY : row[x];
+		}
+	}	
+	return TRUE;
+	}
+}
+
+/*
+int save_game(char * path, settings * game_settings) {
+	FILE * fp;
+	mxml_node_t * tree;
+	return TRUE;
+}
+*/
+
+
+
+/*******************************************************************/
+/*************************** game state ****************************/
+/*******************************************************************/
+
+/*
+*	compute computer's next move and play.
+*	return move in case of success, in case of lose/tie - return LOSE_CODE / TIE_CODE.
+*	in case of an error - exit
+*/
+move computer_turn(settings * game_settings) {
+	moves best_moves = best_next_moves(*game_settings, other_player(game_settings->color)); //find next move
+	move_node * random_best_move;
+	move best_move;
+	if (best_moves.len == -1) { // there was an error
+		exit(0);
+	}
+	if (best_moves.len == 0) { // no possible moves - player wins
+		best_move.promotion = NO_MOVE_CODE;
+		return best_move;
+	}
+	else { // play best_move
+		int r = rand() % best_moves.len;
+		random_best_move = best_moves.first;
+		for (int i = 0; i < r; i++) {
+			random_best_move = random_best_move->next;
+		};
+		best_move = *(move*)random_best_move->data;
+		board_copy(best_move.board, game_settings->board);
+		free_list(&best_moves);
+		game_settings->is_next_checked = (is_king_checked(other_player(game_settings->next), game_settings->board));
+		return best_move;
+	}
+}
+
+
+/* generating all valid moves on board, return all moves as a linked list
+* player = color of the for whom we want to get moves
+* in case of an error - return error_moves
+*/
+moves make_all_moves(settings set){
+	int player = set.next;
+	moves all_moves = { 0 };
+	cord piece;
+	int piece_color;
+	for (int i = 0; i < BOARD_SIZE; i++){
+		for (int j = 0; j < BOARD_SIZE; j++){
+			piece.x = i;
+			piece.y = j;
+			piece_color = (which_color(board_piece(set.board, piece)));
+			if (piece_color == player) { // this cord contains a relevant-color piece
+				moves simple_moves = get_simple_moves(set.board, piece);
+				if (simple_moves.len == -1){ // get_simple_moves had an error
+					free_list(&all_moves);
+					return simple_moves;
+					}
+				else{// if (simple_moves.len != 0) {
+						concat(&all_moves, simple_moves);
+				}
+			}
+		}
+	}
+	return all_moves;
+}
+
+/*
+* return the non-eat (simple) moves.
+* curr = starting coordinate of the move
+* max_step = length of maximal possible step (1 for man, BOARD_SIZE for king)
+* in case of an error - return error_moves
+*/
+moves get_simple_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr){
+	char piece = board_piece(board, curr);
+	int color = which_color(piece);
+	int type = tolower(piece);
+	moves all_simple_moves = { 0 };
+	switch (type)
+	{
+	case PAWN:
+		return pawn_moves(board, curr, color);
+	case BISHOP:
+		return bishop_moves(board, curr, color, FALSE);
+	case ROOK: 
+		return rook_moves(board, curr, color, FALSE);
+	case KNIGHT:
+		return knight_moves(board, curr, color);
+	case QUEEN:
+		return queen_moves(board, curr, color, FALSE);
+	case KING:
+		return king_moves(board, curr, color);
+	default:
+		return all_simple_moves;
+	}
+}
+
+
+/*
+ *	check if the color-king is checked (assuming there is a king on the board)
+ */
+
+int is_king_checked(int color, char board[BOARD_SIZE][BOARD_SIZE]){
+	cord king_location;
+	cord temp;
+	int stop = FALSE;
+	int i;
+	char king = (color == WHITE) ? WHITE_K : BLACK_K;
+	char other_king = (color == WHITE) ? BLACK_K : WHITE_K;
+	char other_pawn = (color == WHITE) ? BLACK_P : WHITE_P;
+	char other_bishop = (color == WHITE) ? BLACK_B : WHITE_B;
+	char other_queen = (color == WHITE) ? BLACK_Q : WHITE_Q;
+	char other_knight = (color == WHITE) ? BLACK_N : WHITE_N;
+	char other_rook = (color == WHITE) ? BLACK_R : WHITE_R;
+	cord dangerous_diags[32];
+	cord dangerous_vertical[32];
+	cord dangerous_horizontal[32];
+	cord dangerous_knight[32];
+
+	// find king's location
+	for (int i = 0; (i < BOARD_SIZE) && !stop; i++){
+		for (int j = 0; (j < BOARD_SIZE) && !stop; j++){
+			temp.x = i;
+			temp.y = j;
+			if (board_piece(board, temp) == king) {
+				king_location = temp;
+				stop = TRUE; //break both loops
+			}
+		}
+	}
+	move_cords(board, king_location, BOARD_SIZE, color, TRUE, TRUE, dangerous_diags); //find diagnal dangerous pieces
+	move_cords(board, king_location, BOARD_SIZE, color, TRUE, FALSE, dangerous_horizontal); //find horizontal dangerous pieces
+	move_cords(board, king_location, BOARD_SIZE, color, FALSE, TRUE, dangerous_vertical); //find vertical dangerous pieces
+	knight_cords(board, king_location, color, dangerous_knight);
+	
+	// check if enemy's pieces that are not pawns or king threatening king
+	for (i = 0; i < 32; i++){
+		if ((is_valid_cord(dangerous_diags[i]) && ((board_piece(board, dangerous_diags[i]) == other_bishop) ||
+													(board_piece(board, dangerous_diags[i]) == other_queen))) ||
+			(is_valid_cord(dangerous_horizontal[i]) && ((board_piece(board, dangerous_horizontal[i]) == other_rook) ||
+													(board_piece(board, dangerous_horizontal[i]) == other_queen)))||
+			(is_valid_cord(dangerous_vertical[i]) && ((board_piece(board, dangerous_vertical[i]) == other_rook) ||
+													(board_piece(board, dangerous_vertical[i]) == other_queen)))||											
+			(is_valid_cord(dangerous_knight[i]) && ((board_piece(board, dangerous_knight[i]) == other_knight))))
+			return TRUE;
+	}
+	// check if emeny's pawn is threatening king
+	temp.y = king_location.y;
+	temp.y += (color == WHITE) ? -1 : 1;
+	for (i = -1; i <= 1; i+=2){
+		temp.x = king_location.x + i;
+		if ((is_valid_cord(temp) && board_piece(board, temp) == other_pawn))
+			return TRUE;
+	}
+	//check if emeny's king is threatening king
+	for (i = -1; i <= 1; i += 2){
+		for (int j = -1; j <= 1; j += 2){
+			temp.x = king_location.x + i;
+			temp.y = king_location.y + i;
+			if (is_valid_cord(temp) && (board_piece(board, temp) == other_king))
+				return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
+moves pawn_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
+	moves piece_simple_moves;
+	piece_simple_moves.len = 0;
+	cord dest;
+	move * single_move;
+	moves promotions;
+	int dest_color;
+	int y_dir = (color == WHITE) ? 1 : -1;
+	
+	dest.y = curr.y + y_dir;
+	
+	for (int x = -1; x <= 1; x++) {
+		single_move = malloc(sizeof(move));
+		if (single_move == NULL) {
+			free_list(&piece_simple_moves);
+			return error_moves;
+		}
+		single_move->start = curr;
+		single_move->promotion = FALSE;
+		dest.x = curr.x + x;
+		if (is_valid_cord(dest)) {
+			dest_color = which_color(board_piece(board, dest));
+			//logical XOR: check if pawn can eat XOR move up
+			if (color == dest_color) {
+				free(single_move);
+				continue;
+			}
+			if ((x == 0) != (dest_color == other_player(color))) {
+				single_move->end = dest;
+				board_copy(board, single_move->board);
+				move_from_to(single_move->board, curr, dest);
+				// check if psaudo-legal move is legal
+				if (is_king_checked(color, single_move->board)) {
+					free(single_move); 
+					continue;
+				}
+				if (dest.y == promotion_row(color)) {
+					promotions = promote(single_move);
+					if (promotions.len == -1){
+						free(single_move);
+						free_list(&piece_simple_moves);
+						return promotions;
+					}
+					concat(&piece_simple_moves, promotions);
+				}
+				else if (!add_node(&piece_simple_moves, single_move, sizeof(move))) { //could not add node to linked list
+					free(single_move);
+					free_list(&piece_simple_moves);
+					return error_moves;
+				}
+				free(single_move);
+			}
+	}
+	}
+	return piece_simple_moves;
+}
+
+moves promote(move * single_move) {
+	moves all_promotions;
+	all_promotions.len = 0;
+	move * new_promotion;
+
+	for (int i = 1; i < 5; i++){ //"foreach" piece in all_pieces (defined in Chess.h)
+		new_promotion = malloc(sizeof(move));
+		if (single_move == NULL) {
+			free_list(&all_promotions);
+			return error_moves;
+		}
+
+		copy_move(single_move, new_promotion);
+		new_promotion->promotion = TRUE;
+		char promoted = islower(board_piece(single_move->board, single_move->end)) ? all_pieces[i] : toupper(all_pieces[i]);
+		board_piece(new_promotion->board, new_promotion->end) = promoted;
+		if (!add_node(&all_promotions, new_promotion, sizeof(move))) { //could not add node to linked list
+			free(new_promotion);
+			free_list(&all_promotions);
+			return error_moves;
+		}
+		free(new_promotion);
+	}
+	return all_promotions;
+}
+
+
+/*
+ *	return moves. in each move:
+ *			start = start_cord
+ *			end = one of the cords in end_cords (there can be at most 31 end cords)
+ *			board = currend board + piece moved from start to end.
+ *	this method is not relevant for pawns.
+ */
+moves cords_to_moves(cord start_cord, cord end_cords[32], char board[BOARD_SIZE][BOARD_SIZE], int color) {
+	cord end_cord;
+	int i = 0;
+	move * new_move;
+	moves new_moves = { 0 };
+	while (is_valid_cord(end_cord = end_cords[i++])) {
+		new_move = malloc(sizeof(move));
+		if (new_move == NULL)
+		{
+			free_list(&new_moves);
+			return error_moves;
+		}
+		
+		new_move->start = start_cord;
+		new_move->end = end_cord;
+		new_move->promotion = FALSE;
+		board_copy(board, new_move->board);
+		move_from_to(new_move->board, start_cord, end_cord);
+		// check if psaudo-legal move is legal
+		if (is_king_checked(color, new_move->board)){
+		//	free(new_move);
+			continue;
+		}
+		else if (!add_node(&new_moves, new_move, sizeof(move))){
+			free(new_move);
+			free_list(&new_moves);
+			return error_moves;
+		}
+		free(new_move);
+	}
+	return new_moves;
+}
+
+void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int color, int move_x, int move_y, cord end_cords[32]) {
+	cord dest;
+	int dest_color;
+
+	// initialize end_cords
+	if (DEBUG1){
+		if (curr.x < -42)
+			printf("%s\n","NO KING!");
+	}
+	int i;
+	for (i = 0; i < 32; i++){
+		end_cords[i] = error_cord;
+	}
+
+	i = 0;
+	for (int x_direction = (-move_x); x_direction <= move_x; x_direction += 2){
+		for (int y_directrion = (-move_y); y_directrion <= move_y; y_directrion += 2) {
+			for (int k = 1; k <= max_move; k++) {
+				dest.x = curr.x + (k*x_direction);
+				dest.y = curr.y + (k*y_directrion);
+				// check if piece can walk to this destination
+				if (!is_valid_cord(dest))
+					break;
+				dest_color = which_color(board_piece(board, dest));
+				if (dest_color == color) //if destination is same color piece - cannot move this waty
+					break;
+				else
+					end_cords[i++] = dest;
+				if (dest_color == other_player(color)) //if ate - cannot continue moving in the same direction
+					break;
+			}
+
+		}
+	}
+}
+
+moves bishop_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king){
+	cord diag_cords[32];
+	int max_move = is_king ? 1 : BOARD_SIZE;
+	move_cords(board, curr, max_move, color, TRUE, TRUE, diag_cords);
+	return cords_to_moves(curr, diag_cords, board, color);
+}
+
+
+moves rook_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king) {
+	int max_move = is_king ? 1 : BOARD_SIZE;
+	cord horizontal_cords[32];
+	cord vertical_cords[32];
+	move_cords(board, curr, max_move, color, TRUE, FALSE, horizontal_cords);
+	moves horizontal_moves = cords_to_moves(curr, horizontal_cords, board, color);
+	if (horizontal_moves.len == -1) 
+		return error_moves;
+	move_cords(board, curr, max_move, color, FALSE, TRUE, vertical_cords);
+	moves vertical_moves = cords_to_moves(curr, vertical_cords, board, color);
+		if (vertical_moves.len == -1) {
+			free_list(&horizontal_moves);
+			return error_moves;
+		}
+		else
+			concat(&horizontal_moves, vertical_moves);
+	return horizontal_moves;
+}
+
+moves queen_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king){
+	moves all_simple_moves = bishop_moves(board, curr, color, is_king);
+	if (all_simple_moves.len == -1)
+		return error_moves;
+	moves more_moves = rook_moves(board, curr, color, is_king);
+	if (more_moves.len == -1) { 
+		free_list(&all_simple_moves);
+		return error_moves;
+	}
+	else
+		concat(&all_simple_moves, more_moves);
+	return all_simple_moves;
+}
+
+moves king_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color) {
+	return queen_moves(board, curr, color, TRUE);
+}
+
+/*
+*	return all possible moves for knight in location curr.
+*/
+
+moves knight_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color){
+	cord jump_cords[32];
+	knight_cords(board, curr, color, jump_cords);
+	return cords_to_moves(curr, jump_cords, board, color);
+}
+
+
+/*
+*	return possible destination for knight in curr position.
+*		-board: current borad layout
+*		-curr: knight's location
+*		-color: knight's color
+*		-jump_cords: array of cords in which the cords will be returned
+								(the method changes the array and returns void value)
+*/
+
+void knight_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, cord jump_cords[32]) {
+	int i, j,k,l, x, y;
+	for (i = 0; i < 32; i++){
+		jump_cords[i] = error_cord;
+	}
+	l = 0;
+	for (i = -1; i <= 1; i+=2) {
+		for (j = -2; j <= 2; j += 4){
+			x = i, y = j;
+			for (k = 0; k < 2; k++){
+				x ^= y;
+				y ^= x;
+				x ^= y;
+				cord jump_to = { curr.x + x, curr.y + y };
+				if (is_valid_cord(jump_to) && (which_color(board_piece(board, jump_to)) != color))
+					jump_cords[l++] = jump_to;
+			}
+		}
+		}
+}
+
+/*
+*	move piece in start to end.
+*/
+
+
+void move_from_to(char board[BOARD_SIZE][BOARD_SIZE], cord start, cord end) {
+	if (is_valid_cord(start) && is_valid_cord(end)) {
+		board_piece(board, end) = board_piece(board, start);
+		board_piece(board, start) = EMPTY;
+	}
+}
+/****************************************************************/
+/********************** Minimax Algorithm ***********************/
+/****************************************************************/
+
+/* find and return the best computer's next move acording to minimax algorithm.
+* in case of an error - return a move with .steps_len = -1
+* (envelope function that calls minimax())
+*/
+moves best_next_moves(settings set, int maximizer) {
+	// minimax function
+	moves best_moves = { 0 };
+	moves possible_moves = make_all_moves(set);
+	move * temp_best_move;
+	if (possible_moves.len == -1) { //error
+		return possible_moves;
+	}
+	int best_score = INT_MIN;
+	int curr_alpha = INT_MIN;
+	move_node * curr = possible_moves.first;
+	while (curr != NULL) {
+		//get the score of each next possible moves, according to minimax algorithm
+		settings next_set;
+		next_set.color = set.color;
+		next_set.next = other_player(set.next);
+		board_copy(((move*)curr->data)->board, next_set.board);
+		int curr_score = minimax(next_set, curr_alpha, INT_MAX, (next_set.next == maximizer), set.minimax_depth - 1);
+		if (curr_score == SCORE_ERROR) {
+			free_list(&possible_moves);
+			free_list(&best_moves);
+			return error_moves;
+		}
+		if (curr_score > curr_alpha)
+			curr_alpha = curr_score;
+		temp_best_move = curr->data;
+		if (curr_score > best_score) { // if new score is higher - free previous best moves
+			free_list(&best_moves);
+			best_score = curr_score;
+		}				
+		if (!(curr_score < best_score)) {
+			if (!add_node(&best_moves, temp_best_move, sizeof(move))) {
+				free_list(&best_moves);
+				free_list(&possible_moves);
+				return error_moves;
+			}
+		}
+		curr = curr->next;
+	}
+	free_list(&possible_moves);
+	if (DEBUG)
+		printf("CHOSEN SCORE: %d\n", best_score);
+	return best_moves;
+}
+
+/* minimax algorithm with alpha-beta prunning.
+* the function returns score (int) according to the minimax algorithm
+* and the score() function. returns ERROR_SCORE in case of an error.
+*/
+int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth){
+
+	int player = set.next;
+	if (depth == 0) {
+		int scorrer = is_maxi_player ? player : other_player(player);
+		int board_score = score(set.board, scorrer, player); //return score according to maximizing player
+		return board_score;
+	}
+	moves possible_moves = make_all_moves(set); // create all possible moves for player
+	if (possible_moves.len == -1) { //there was an error, return an error score
+		return SCORE_ERROR;
+	}
+	else if (possible_moves.len == 0){ // reached a "leaf" at the minimax tree (no more possible moves from here)
+		if (is_king_checked(player, set.board))
+			return is_maxi_player ? INT_MIN : INT_MAX;
+		else // tie
+			return TIE_SCORE;
+	}
+	int minimax_score = is_maxi_player ? INT_MIN : INT_MAX;
+	move_node* curr = possible_moves.first;
+	while (curr != NULL){ // continue recursively for each possible move
+		move * cur_move = curr->data;
+		settings next_set;
+		next_set.next = other_player(player);
+		board_copy(cur_move->board, next_set.board);
+		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1);
+		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
+			free_list(&possible_moves);
+			return SCORE_ERROR;
+		}
+		// get maximum\minimum v_score according to is_maxi_player
+		minimax_score = is_maxi_player ? maxi(minimax_score, cur_score) : mini(minimax_score, cur_score);
+		if (is_maxi_player)
+			alpha = maxi(alpha, minimax_score);
+		else
+			beta = mini(beta, minimax_score);
+		if (beta <= alpha) 
+			break; //pruning
+		curr = curr->next;
+	}
+	free_list(&possible_moves);
+	return minimax_score;
+}
+
+/* calculates the board's score.
+* scoring_player = color of the minimax-maximizer player
+* current_player = color of the player whose turn it is now.
+*
+* the function returns:
+*				WIN_SCORE if scoring_player wins this board
+*				LOSE_SCORE if scoring_player loses this board
+*				scoring_player's total pieces value minus other player's total pieces value otherwise
+*				ERROR_SCORE in case of an error
+*/
+int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_player){
+	int total_score;
+	cord piece;
+	moves possible_moves;
+	int no_more_moves = TRUE;
+	int no_scoring_king = TRUE;
+	int no_other_king = TRUE;
+	int num_of_moves;
+	int player_score = 0;
+	int other_player_score = 0;
+	int is_scoring_piece;
+	for (int i = 0; i < BOARD_SIZE; i++){
+		for (int j = 0; j < BOARD_SIZE; j++){
+			piece.x = i;
+			piece.y = j;
+			char cur_piece = board_piece(board, piece);
+			if (cur_piece == EMPTY)
+				continue;
+			
+			int piece_color = which_color(cur_piece);
+			is_scoring_piece = (piece_color == scoring_player);
+
+			int piece_score = get_piece_score(cur_piece);
+			if (piece_score == KING_SCORE) {
+				no_scoring_king = (no_scoring_king && !is_scoring_piece);
+				no_other_king = (no_other_king && is_scoring_piece);
+			}
+			if (is_scoring_piece)
+				player_score += piece_score;
+			else //piece_color is other player's color
+				other_player_score += piece_score;
+
+			// we have to check that current_player has at least one piece that
+			// can move, otherwise current_player loses.
+			if (no_more_moves && (piece_color == current_player)) {
+				// check walking move for piece. checking move of distance 1 takes only O(1) time if
+				// player cannot move and O(n) if player can move (creating new board. occurs at most once)
+				// is enough for both king & man  (if king cannot move 1 he cannot move 2) 
+				possible_moves = get_simple_moves(board, piece);
+				num_of_moves = possible_moves.len;
+				free_list(&possible_moves);
+				if (num_of_moves == -1) //there was an error, return an error score
+					return SCORE_ERROR;
+				else if (num_of_moves == 0) {
+					// if a player cannot move they might be able to eat. is_chain=FALSE since 
+					// we want to know if a player can move. in addition, we check max_eat=1 for
+					// both king and man, since if a king needs more than max_eat=1 he is able to walk
+					// therefore this check takes O(1) if player cannot eat and O(n) if player can eat
+					// (creating new board. occurs at most once)
+					possible_moves = get_simple_moves(board, piece);
+					num_of_moves = possible_moves.len;
+					free_list(&possible_moves);
+					if (num_of_moves == -1) //there was an error, return an error score
+						return SCORE_ERROR;
+				}
+				// once one of the current_player can move, they do not lose,
+				// no need to preform this check again.
+				if (num_of_moves > 0) {
+					no_more_moves = FALSE;
+				}
+			}
+		}
+	}
+	// current_player cannot play.
+	if (no_more_moves) {
+		if (is_king_checked(current_player, board)) // checkmate
+			total_score = (scoring_player == current_player) ? LOSE_SCORE : WIN_SCORE;
+		else // tie
+			total_score = TIE_SCORE; // better only than LOSE_SCORE
+	}
+	// scoring_player's king has ceased to be
+	else if (no_scoring_king)
+		total_score = LOSE_SCORE;
+	// other player's king is pushing up the daisies
+	else if (no_other_king)
+		total_score = WIN_SCORE;
+	// both players' kings are alive and pining for the fjords
+	else
+		total_score = player_score - other_player_score;
+	if (DEBUG && (total_score != 0))
+		printf("DEPTH: LOL\tSCORE: %d\n", total_score);
+	return total_score;
+}
+
+int get_piece_score(char player_piece) {
+	char piece = tolower(player_piece);
+	switch (piece)
+	{
+	case PAWN:
+		return PAWN_SCORE;
+	case KNIGHT:
+		return KNIGHT_SCORE;
+	case BISHOP:
+		return BISHOP_SCORE;
+	case ROOK:
+		return ROOK_SCORE;
+	case QUEEN:
+		return QUEEN_SCORE;
+	case KING:
+		return KING_SCORE;
+	default:
+		return 0;
+	}
+}
+
