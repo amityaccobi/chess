@@ -1,18 +1,16 @@
-#ifndef Gui_
-#define Gui_
+#ifndef GUI_
+#define GUI
 
-# include "GuiUtils.h"
+#include "GuiUtils.h"
 
 /*****************/
 /****CONTSANTS****/
 /*****************/
 #define NUM_OF_SLOTS 1
-char *path[NUM_OF_SLOTS] = { "chess2.xml" };
 #define PATH_LENGTH 10
 #define SQUARE_SIZE 75
 
 
-#define QUIT -1
 #define MAIN_WINDOW 1
 #define PLAYER_SELECTION_WINDOW 2
 #define SETTINGS_WINDOW 3
@@ -44,4 +42,4 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 void set_square_selected(gui_tree_node *board_tools);
 void get_player_next_moves(gui_tree_node *board_tools);
 
-#endif
+#endif GUI

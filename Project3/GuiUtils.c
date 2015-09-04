@@ -84,7 +84,8 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 }
 
 //creating a button and connecting it to its parent in the UI tree, return if succeeded
-int create_button(Sint16 x_offset, Sint16 y_offset, Sint16 x_rect, Sint16 y_rect, Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent){
+int create_button(Sint16 x_offset, Sint16 y_offset, Sint16 x_rect, Sint16 y_rect,
+					Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent){
 	return create_image(x_offset, y_offset, x_rect, y_rect, width, height, image_surface, parent);
 }
 
@@ -106,7 +107,8 @@ int draw_tree(gui_tree_node * tree_root) {
 }
 
 int draw_gui_tree_node(gui_tree_node* gui_tree_node) {
-	if (SDL_BlitSurface(gui_tree_node->surface, &(gui_tree_node->surface->clip_rect), gui_tree_node->parent->surface, gui_tree_node->offset_rect) != 0) {
+	if (SDL_BlitSurface(gui_tree_node->surface, &(gui_tree_node->surface->clip_rect),
+						gui_tree_node->parent->surface, gui_tree_node->offset_rect) != 0) {
 		SDL_FreeSurface(gui_tree_node->surface);
 		//printf("ERROR: failed to blit image: %s\n", SDL_GetError());
 		return FALSE;
@@ -117,13 +119,15 @@ int draw_gui_tree_node(gui_tree_node* gui_tree_node) {
 // check if a mouse click is inside a control
 int is_inside_gui_tree_node(gui_tree_node *gui_tree_node, int x, int y) {
 	if (gui_tree_node != NULL) {
-	//if conrtol not error gui_tree_node
-	if (gui_tree_node->offset_rect == NULL) {
-		return 1;
-	}
-	if ((x >= gui_tree_node->offset_x) && (x <= gui_tree_node->offset_x + gui_tree_node->surface->clip_rect.w) &&
-		(y >= gui_tree_node->offset_y) && (y <= gui_tree_node->offset_y + gui_tree_node->surface->clip_rect.h)) {
-		return 1;
+		//if conrtol not error gui_tree_node
+		if (gui_tree_node->offset_rect == NULL) {
+			return 1;
+		}
+		if ((x >= gui_tree_node->offset_x) &&
+			(x <= gui_tree_node->offset_x + gui_tree_node->surface->clip_rect.w) &&
+			(y >= gui_tree_node->offset_y) &&
+			(y <= gui_tree_node->offset_y + gui_tree_node->surface->clip_rect.h)) {
+			return 1;
 		}
 	}
 	return 0;

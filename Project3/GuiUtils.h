@@ -1,8 +1,9 @@
-#ifndef GuiUtils_
-#define GuiUtils_
+#ifndef GUIUTILS_
+#define GUIUTILS_
 
 
 #include "GuiTree.h"
+#include "Chess.h"
 
 
 

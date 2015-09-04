@@ -39,18 +39,18 @@ void concat(linked_list* list1, linked_list list2){
 }
 
 //free linked-list allocated memory
-void free_list(linked_list * del_moves){
+void free_list(linked_list * del_moves, void(*free_func)()){
 	if (del_moves->len != 0){
-		free_nodes(del_moves->first);
+		free_nodes(del_moves->first, free_func);
 		del_moves->len = 0;
 	}
 }
 
 //free linked-list-node's allocated memory
-void free_nodes(node* del_node){
+void free_nodes(node* del_node, void (* free_func)()){
 	if (del_node != NULL){
-		free_nodes(del_node->next);
-		free(del_node->data);
+		free_nodes(del_node->next, free_func);
+		free_func(del_node->data);
 		free(del_node);
 	}
 }

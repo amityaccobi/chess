@@ -46,9 +46,6 @@
 #define WHITE 0
 #define BLACK 1
 
-#define FALSE 0
-#define TRUE 1
-
 #define PAWN_SCORE 1
 #define BISHOP_SCORE 3
 #define KNIGHT_SCORE 3
@@ -63,6 +60,7 @@
 
 #define PLAYER_VS_PLAYER 1
 #define PLAYER_VS_COMP 2
+
 #define BEST_DIFFICULTY 0
 
 /*****************/
@@ -87,7 +85,7 @@ typedef struct {
 	cord end;
 	char board[BOARD_SIZE][BOARD_SIZE]; // board layout in the end of the move
 	int promotion; //boolean: is promotion move
-//	int valid; //value 0 means there are no valid moves, value -1 means there have been an error.
+	//	int valid; //value 0 means there are no valid moves, value -1 means there have been an error.
 }move; //struct representing a move on the board
 
 typedef linked_list moves;
@@ -134,6 +132,8 @@ typedef node move_node;
 
 #define string_to_color(color) ((strcmp((color), "White") == 0) ? WHITE : BLACK)
 
+#define color_string(color) (((color) == WHITE) ? "White" : "Black")
+
 
 /***********************/
 /**** LIST OF FUNCS ****/
@@ -141,10 +141,11 @@ typedef node move_node;
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
 char make_board(char board[BOARD_SIZE][BOARD_SIZE], cord* moves);
 void copy_move(move * single_move, move* to_copy_move);
+int save_game(char * path, settings * game_settings);
 int load_game(char * path, settings * game_settings);
 linked_list make_all_moves(settings set);
 linked_list get_simple_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr);
-int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_player);
+int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_playerint, int is_best_difficulty);
 int is_valid_move(linked_list all_valid_moves, move new_move);
 linked_list eat(char board[BOARD_SIZE][BOARD_SIZE], cord eater, int x_direction, int y_direction, int k, int is_chain);
 void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOARD_SIZE]);
@@ -157,8 +158,8 @@ void remove_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece);
 void add_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece, int color, char type);
 move computer_turn(settings * game_settings);
 linked_list get_max_eat(char board[BOARD_SIZE][BOARD_SIZE], cord start, int max_eat, int is_chain);
-int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth);
-linked_list best_next_moves(settings set, int color);
+int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, int is_best_difficulty);
+moves best_next_moves(settings set, int maximizer);
 void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int color, int move_x, int move_y, cord move_cords[32]);
 moves cords_to_moves(cord start_cord, cord move_cords[32], char board[BOARD_SIZE][BOARD_SIZE], int color);
 linked_list pawn_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color);
@@ -174,5 +175,7 @@ int get_piece_score(char player_piece);
 int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece);
 int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece);
 int is_king_checked(int color, char board[BOARD_SIZE][BOARD_SIZE]);
+int get_best_depth(char board[BOARD_SIZE][BOARD_SIZE], int player);
+moves get_moves_for_piece(moves all_possible_moves, cord c);
 
-#endif
+#endif CHESS

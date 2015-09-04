@@ -7,7 +7,7 @@
 #define GAME_MODE "game_mode "
 #define DIFFICULTY "difficulty "
 #define COLOR_SETTING "user_color "
-#define NEXT_PLAYER "f "
+#define NEXT_PLAYER "next_player "
 #define LOAD "load "
 #define CLEAR_SETTING "clear"
 #define REMOVE_SETTING "rm <"
@@ -51,9 +51,9 @@
 #define print_message(message) (printf("%s", message))
 
 #define print_cord(c) (printf("<%c,%d>",(c).x + 'a', (c).y+1))
-#define color_string(color) (((color) == WHITE) ? "White" : "Black")
 #define print_win(color) (printf("Mate! %s player wins the game\n", (color)))
 
+int console_mode();
 int print_line();
 int print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 int read_input(char input[51]);
@@ -62,6 +62,6 @@ int print_move(move * move0);
 int print_type(char ch);
 move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]);
 char piece_from_string(char * piece_char, int color);
-move user_turn(settings * game_settings);
+move user_turn(settings * game_settings, int was_checked);
 
-#endif
+#endif CONSOLE_

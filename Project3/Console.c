@@ -1,20 +1,22 @@
 #include "Console.h"
 
-int main_2()
+int console_mode()
 {
-	/////////////////////////////////////////////////////	//srand(time(0)); // for random choose between same-score moves
-	print_message(ENTER_SETTINGS);
 	settings game_settings = settings_state();
 	move next_move;
+	int was_checked = FALSE;
 	//game state
 	while (TRUE) {
 		// user turn
-		if ((game_settings.mode == PLAYER_VS_PLAYER) || (game_settings.next == game_settings.color))
-			next_move = user_turn(&game_settings);
+		if ((game_settings.mode == PLAYER_VS_PLAYER) || (game_settings.next == game_settings.color)) {
+			next_move = user_turn(&game_settings, was_checked);
+		}
 		//computer turn
 		else {
 			next_move = computer_turn(&game_settings);
 			if (next_move.promotion != NO_MOVE_CODE) {
+				if (was_checked)
+					print_message(CHECK);
 				if (printf("Computer: move ") < 0) {
 					perror_message("printf");
 					exit(0);
@@ -38,11 +40,10 @@ int main_2()
 		else {
 			if (print_board(next_move.board) < 0)
 				exit(0);
-			if (game_settings.is_next_checked)
-				print_message(CHECK);
 		}
 		//switch next player
 		game_settings.next = other_player(game_settings.next);
+		was_checked = game_settings.is_next_checked;
 	}
 	return 0;
 }
@@ -57,7 +58,7 @@ int main_2()
 */
 int print_line(){
 	int i;
-	if (printf("  |") < 0) {
+	if (printf(" |") < 0) {
 		perror_message("printf");
 		return -1;
 	}
@@ -81,18 +82,20 @@ int print_line(){
 
 int print_board(char board[BOARD_SIZE][BOARD_SIZE])
 {
+	char c;
 	int i, j;
 	if (print_line() < 0) {
 		return -1;
 	}
 	for (j = BOARD_SIZE - 1; j >= 0; j--)
 	{
-		if (printf((j < 9 ? " %d" : "%d"), j + 1) < 0) {
+		if (printf((j < 9 ? "%d" : "%d"), j + 1) < 0) {
 			perror_message("printf");
 			return -1;
 		}
 		for (i = 0; i < BOARD_SIZE; i++){
-			if (printf("| %c ", board[i][j]) < 0) {
+			c = (board[i][j] == EMPTY) ? ' ' : board[i][j];
+			if (printf("| %c ", c) < 0) {
 				perror_message("printf");
 				return -1;
 			}
@@ -104,7 +107,7 @@ int print_board(char board[BOARD_SIZE][BOARD_SIZE])
 		if (print_line() < 0)
 			return -1;
 	}
-	if (printf("   ") < 0) {
+	if (printf("  ") < 0) {
 		perror_message("printf");
 		return -1;
 	}
@@ -137,7 +140,10 @@ settings settings_state() {
 	int next = WHITE;
 	int user_color = WHITE;
 	char input[51];
+	moves possible_moves;
 	settings game_settings;
+
+
 	//default settings:
 	game_settings.color = user_color;
 	game_settings.minimax_depth = depth;
@@ -145,8 +151,10 @@ settings settings_state() {
 	game_settings.next = next;
 	clear(game_settings.board);
 	init_board(game_settings.board);
+	if (!print_board(game_settings.board))
+		exit(0);
 	while (TRUE) {
-
+		print_message(ENTER_SETTINGS);
 		if (!read_input(input)) {
 			exit(0);
 		};
@@ -201,9 +209,8 @@ settings settings_state() {
 				if ((depth < 1) || (depth > 4)) {
 					print_message(WRONG_MINIMAX_DEPTH);
 				}
-				else
-					game_settings.minimax_depth = depth;
 			}
+			game_settings.minimax_depth = depth;
 		}
 		// parse: user_color color
 		else if (is_command_with_args(COLOR_SETTING) && (game_settings.mode == PLAYER_VS_COMP)) {
@@ -223,6 +230,8 @@ settings settings_state() {
 		else if is_command_with_args(LOAD) {
 			if (!load_game(args, &game_settings))
 				print_message(WRONG_FILE_NAME);
+			else if (!print_board(game_settings.board))
+				exit(0);
 		}
 
 		// parse: clear
@@ -242,9 +251,14 @@ settings settings_state() {
 		// parse: start
 		else if is_command(START_SETTING){
 			// start game only if board is valid
-			if (is_valid_board(game_settings.board)) {
-				//if player cannot move.............................!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				break;
+			if (is_valid_board(game_settings.board) &&
+				((possible_moves = make_all_moves(game_settings)).len != 0)) {
+				if (possible_moves.len > 0) {
+					free_list(&possible_moves, free);
+					break;
+				}
+				else if (possible_moves.len == -1) //error creating possible moves
+					exit(0);
 			}
 			else
 				print_message(WRONG_BOARD_INITIALIZATION);
@@ -382,13 +396,15 @@ int print_type(char ch) {
 *
 * * in case of an error - exit.
 */
-move user_turn(settings * game_settings) {
+move user_turn(settings * game_settings, int was_checked) {
 	char input[51];
 	char * args;
 	move temp_move;
 	char* cord_ptr;
 	moves possible_moves = make_all_moves(*game_settings);
+	moves moves_for_piece;
 	settings temp_settings;
+	int move_score;
 	if (possible_moves.len == -1){ // there was an error
 		exit(0);
 	}
@@ -396,13 +412,15 @@ move user_turn(settings * game_settings) {
 		temp_move.promotion = NO_MOVE_CODE;
 		return temp_move;
 	}
+	else if (was_checked)
+		print_message(CHECK);
 	while (TRUE) {
 		temp_settings = *game_settings;
 		print_message(color_string(game_settings->next));
 		print_message(ENTER_YOUR_MOVE);
 		move_node * cur;
 		if (!read_input(input)) { //error reading input
-			free_list(&possible_moves);
+			free_list(&possible_moves, free);
 			exit(0);
 		}
 		cur = possible_moves.first;
@@ -443,7 +461,7 @@ move user_turn(settings * game_settings) {
 				}
 				move to_play = *(move *)(cur->data);
 				board_copy(to_play.board, game_settings->board);
-				free_list(&possible_moves);
+				free_list(&possible_moves, free);
 				game_settings->is_next_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
 				return to_play;
 			}
@@ -461,7 +479,7 @@ move user_turn(settings * game_settings) {
 			while (cur != NULL) {
 				if (is_same_cord(((move*)(cur->data))->start, c)) {
 					if (print_move(cur->data) < 0) {
-						free_list(&possible_moves);
+						free_list(&possible_moves, free);
 						exit(0);
 					}
 				}
@@ -473,14 +491,14 @@ move user_turn(settings * game_settings) {
 			temp_settings.minimax_depth = atoi(args);
 			moves best_moves = best_next_moves(temp_settings, temp_settings.next);
 			if (best_moves.len == -1){
-				free_list(&possible_moves);
+				free_list(&possible_moves, free);
 				exit(0);
 			}
 			move_node * curr_move = best_moves.first;
 			while (curr_move != NULL) {
 				if (print_move(curr_move->data) < 0){
-					free_list(&possible_moves);
-					free_list(&best_moves);
+					free_list(&possible_moves, free);
+					free_list(&best_moves, free);
 					exit(0);
 				}
 				curr_move = curr_move->next;
@@ -490,29 +508,27 @@ move user_turn(settings * game_settings) {
 		else if (is_command_with_args(GET_SCORE)){
 			int depth = atoi(args);
 			temp_move = parse_move(input, game_settings->board);
-			board_copy(temp_settings.board, temp_move.board);
+			board_copy(temp_move.board, temp_settings.board);
 			temp_settings.next = other_player(game_settings->next);
-			if (depth != 0) {
-				int score = minimax(temp_settings, INT_MAX, INT_MIN, FALSE, depth - 1);
-				if (score == SCORE_ERROR){
-					free_list(&possible_moves);
-					exit(0);
-				}
-				printf("%d\n", score);
+			if (depth != 0) 
+				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE);
+			else // depth == 0 if best [since: atoi("best") = 0]
+				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings->board, game_settings->next) - 1, TRUE);
+
+			if (move_score == SCORE_ERROR){
+				free_list(&possible_moves, free);
+				exit(0);
 			}
-			else{ //BEST score
-				//TODO
-			}
+			printf("%d\n", move_score);
 		}
 		else if (is_command_with_args(SAVE)) {
-			//TODO
-		}
-		else if (is_command_with_args(LOAD)) {
-			//TODO
+			if (!save_game(args, game_settings)) {
+				print_message(WRONG_FILE_NAME);
+			}
 		}
 		// parse: quit
 		else if (is_command(QUIT)) {
-			free_list(&possible_moves);
+			free_list(&possible_moves, free);
 			exit(0);
 		}
 		else

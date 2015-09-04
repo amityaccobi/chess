@@ -2,12 +2,8 @@
 #define TREE_
 
 #include "List.h"
-#include <stdio.h>
 #include <SDL.h>
 #include <SDL_video.h>
-#include "Chess.h"
-
-
 
 typedef struct gui_tree_node{
 	linked_list children;
@@ -29,4 +25,4 @@ void free_tree(gui_tree_node* parent);
 
 
 
-#endif
+#endif TREE_
