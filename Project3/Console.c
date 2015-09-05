@@ -5,6 +5,7 @@ int console_mode()
 	settings game_settings = settings_state();
 	move next_move;
 	int was_checked = FALSE;
+	check_castling_conditions(game_settings);
 	//game state
 	while (TRUE) {
 		// user turn
@@ -333,7 +334,7 @@ move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]){
 int print_move(move * move0) {
 	int castle = move0->is_castle;
 
-	if (castle && (printf("%s", "castle") < 0)) {
+	if (castle && (printf("%s", "castle ") < 0)) {
 		perror_message("printf");
 		return -1;
 	}
@@ -341,13 +342,15 @@ int print_move(move * move0) {
 		perror_message("printf");
 		return -1;
 	}
-	if (castle || printf("%s", " to ") < 0) {
+	if (!castle) {
+	if (printf("%s", " to ") < 0) {
 		perror_message("printf");
 		return -1;
 	}
-	if (castle || print_cord(move0->end) < 0) {
+	if (print_cord(move0->end) < 0) {
 		perror_message("printf");
 		return -1;
+	}
 	}
 	if (move0->promotion) {
 		if (print_type(board_piece(move0->board, move0->end)) < 0) {

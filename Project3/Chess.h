@@ -78,6 +78,13 @@ typedef struct {
 	int next;
 	int is_next_checked;
 	char board[BOARD_SIZE][BOARD_SIZE];
+	//for castling:
+	int white_king_moved;
+	int black_king_moved;
+	int white_rook_1_moved;
+	int white_rook_2_moved;
+	int black_rook_1_moved;
+	int black_rook_2_moved;
 } settings; //game settings
 
 typedef struct {
@@ -143,7 +150,7 @@ char make_board(char board[BOARD_SIZE][BOARD_SIZE], cord* moves);
 void copy_move(move * single_move, move* to_copy_move);
 int save_game(char * path, settings * game_settings);
 int load_game(char * path, settings * game_settings);
-linked_list make_all_moves(settings set);
+linked_list make_all_moves(settings * set);
 linked_list get_simple_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr);
 int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_playerint, int is_best_difficulty);
 int is_valid_move(linked_list all_valid_moves, move new_move);
@@ -177,6 +184,7 @@ int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece);
 int is_king_checked(int color, char board[BOARD_SIZE][BOARD_SIZE]);
 int get_best_depth(char board[BOARD_SIZE][BOARD_SIZE], int player);
 moves get_moves_for_piece(moves all_possible_moves, cord c);
-moves get_castling_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color);
+move get_castling_move(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color);
+
 
 #endif CHESS

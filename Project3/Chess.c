@@ -1,13 +1,6 @@
 #include "Chess.h"
 #include "Console.h"
 
-int white_king_moved;
-int black_king_moved;
-int white_rook_1_moved;
-int white_rook_2_moved;
-int black_rook_1_moved;
-int black_rook_2_moved;
-
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
 move error_move = { 0, 0, 0, -1, -1 };
@@ -96,13 +89,13 @@ void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOA
 /*
 *  a method that checkes castling conditions in the end of each turn
 */
-void check_castling_conditions(char board[BOARD_SIZE][BOARD_SIZE]){
-	white_king_moved = (white_king_moved || (board[4][0] == WHITE_K));
-	black_king_moved = (black_king_moved || (board[4][7] == BLACK_K));
-	white_rook_1_moved = (white_rook_1_moved || (board[0][0] == WHITE_R));
-	white_rook_2_moved = (white_rook_2_moved || (board[7][0] == WHITE_R));
-	black_rook_1_moved = (black_rook_1_moved || (board[0][7] == BLACK_R));
-	black_rook_2_moved = (black_rook_2_moved || (board[7][7] = BLACK_R));
+void check_castling_conditions(settings * game_settings){
+	game_settings->white_king_moved = (white_king_moved || (game_settings->board[4][0] == WHITE_K));
+	game_settings->black_king_moved = (black_king_moved || (game_settings->board[4][7] == BLACK_K));
+	game_settings->white_rook_1_moved = (white_rook_1_moved || (game_settings->board[0][0] == WHITE_R));
+	game_settings->white_rook_2_moved = (white_rook_2_moved || (game_settings->board[7][0] == WHITE_R));
+	game_settings->black_rook_1_moved = (black_rook_1_moved || (game_settings->board[0][7] == BLACK_R));
+	game_settings->black_rook_2_moved = (black_rook_2_moved || (game_settings->board[7][7] = BLACK_R));
 }
 
 
@@ -161,9 +154,12 @@ moves get_moves_for_piece(moves all_possible_moves, cord c) {
 	moves moves_for_piece = { 0 };
 	node * curr_node = all_possible_moves.first;
 	move *curr_move;
+	int king_y;
+
 	while (curr_node != NULL){
 		curr_move = curr_node->data;
-		if is_same_cord((curr_move->start), c) {
+		king_y = (which_color(board_piece(curr_move->board, curr_move->end)) == WHITE) ? 0 : 7;
+		if (is_same_cord((curr_move->start), c) || (curr_move->is_castle && ((c.x == 4)&& (c.y ==king_y)))) {
 			if (!add_node(&moves_for_piece, curr_move, sizeof(move))){
 				free_list(&moves_for_piece, free);
 				return error_moves;
@@ -330,8 +326,9 @@ move computer_turn(settings * game_settings) {
 * player = color of the for whom we want to get moves
 * in case of an error - return error_moves
 */
-moves make_all_moves(settings set){
-	int player = set.next;
+moves make_all_moves(settings * set){
+	check_castling_conditions(set);
+	int player = set->next;
 	moves all_moves = { 0 };
 	cord piece;
 	int piece_color;
@@ -339,9 +336,9 @@ moves make_all_moves(settings set){
 		for (int j = 0; j < BOARD_SIZE; j++){
 			piece.x = i;
 			piece.y = j;
-			piece_color = (which_color(board_piece(set.board, piece)));
+			piece_color = (which_color(board_piece(set->board, piece)));
 			if (piece_color == player) { // this cord contains a relevant-color piece
-				moves simple_moves = get_simple_moves(set.board, piece);
+				moves simple_moves = get_simple_moves(set->board, piece);
 				if (simple_moves.len == -1){ // get_simple_moves had an error
 					free_list(&all_moves, &free);
 					return simple_moves;
@@ -534,7 +531,7 @@ moves promote(move * single_move) {
 	move * new_promotion;
 	char all_pieces[7] = "bnrq";
 
-	for (int i = 0; i < 4; i++){ // "foreach" piece in all_pieces (defined in Chess.h)
+	for (int i = 0; i < 4; i++){
 		new_promotion = malloc(sizeof(move));
 		if (single_move == NULL) {
 			free_list(&all_promotions, &free);
@@ -647,6 +644,8 @@ moves rook_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int i
 	int max_move = is_king ? 1 : BOARD_SIZE;
 	cord horizontal_cords[32];
 	cord vertical_cords[32];
+	move castle_move;
+
 	move_cords(board, curr, max_move, color, TRUE, FALSE, horizontal_cords);
 	moves horizontal_moves = cords_to_moves(curr, horizontal_cords, board, color);
 	if (horizontal_moves.len == -1)
@@ -659,6 +658,13 @@ moves rook_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int i
 	}
 	else
 		concat(&horizontal_moves, vertical_moves);
+	if (tolower(board_piece(board, curr)) == ROOK) {//check if need to castle
+		castle_move = get_castling_move(board, curr, color);
+		if (castle_move.promotion != -1 && !add_node(&horizontal_moves, &castle_move, sizeof(move))) {
+			free_list(&horizontal_moves, &free);
+			return error_moves;
+		}
+	}
 	return horizontal_moves;
 }
 
@@ -677,23 +683,10 @@ moves queen_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int 
 }
 
 moves king_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
-	moves all_king_moves;
-	moves castling_moves;
-
-	all_king_moves = queen_moves(board, curr, color, TRUE);
-	if (all_king_moves.len != -1 && (tolower(board_piece(board, curr)) == KING)) {
-		castling_moves = get_castling_moves(board, curr, color);
-		if (castling_moves.len == -1){
-			free_list(&all_king_moves, free);
-			return error_moves;
-		}
-		else
-			concat(&all_king_moves, castling_moves);
-	}
-	return all_king_moves;
+	return queen_moves(board, curr, color, TRUE);
 }
 
-moves get_castling_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
+move get_castling_move(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
 	cord c0 = { 0, curr.y };
 	cord c1 = { 1, curr.y };
 	cord c2 = { 2, curr.y };
@@ -701,43 +694,40 @@ moves get_castling_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int colo
 	cord c5 = { 5, curr.y };
 	cord c6 = { 6, curr.y };
 	cord c7 = { 7, curr.y };
-	move big_castle;
-	move small_castle;
-	moves castling_moves = { 0 };
+	move castle = error_move;
+	cord king_dest;
+	cord king_loc = { 4, (color == WHITE) ? 0 : 7 };
 
-	big_castle.start = small_castle.start = curr;
-	big_castle.end = c2;
-	small_castle.end = c6;
-	big_castle.is_castle = small_castle.is_castle = TRUE;
-	big_castle.promotion = small_castle.promotion = FALSE;
-	board_copy(board, big_castle.board);
-	board_copy(board, small_castle.board);
-	move_from_to(big_castle.board, big_castle.start, big_castle.end);
-	move_from_to(big_castle.board, c0, c3);
-	move_from_to(small_castle.board, small_castle.start, small_castle.end);
-	move_from_to(small_castle.board, c7, c5);
+	castle.start = curr;
+	castle.is_castle = TRUE;
+	castle.promotion = FALSE;
+	board_copy(board, castle.board);
 
 	int king_moved = (color == WHITE) ? white_king_moved : black_king_moved;
 	int rook1_moved = (color == WHITE) ? white_rook_1_moved : black_rook_1_moved;
 	int rook2_moved = (color == WHITE) ? white_rook_2_moved : black_rook_2_moved;
-	if (!king_moved && !is_king_checked(color, board)) {
-		if (!rook1_moved &&
-			(board_piece(board, c1) == EMPTY) &&
+
+	int relevant_rook_moved = (!rook1_moved && (curr.x == 0) || !rook2_moved && (curr.x == 7));
+
+	if (!king_moved && !is_king_checked(color, board) && !relevant_rook_moved) {
+		if ((curr.x == 0) &&  //relevant rook is rook1 (big castle)
+			((board_piece(board, c1) == EMPTY) &&
 			(board_piece(board, c2) == EMPTY) &&
-			(board_piece(board, c3) == EMPTY) && !is_cord_checked(c3, color, board)) {
-			if (!add_node(&castling_moves, &big_castle, sizeof(move)))
-				return error_moves;
+			(board_piece(board, c3) == EMPTY) && !is_cord_checked(c3, color, board))) {
+			castle.end = c3;
+			king_dest = c6;
 		}
-		if (!rook2_moved &&
+		else if ((curr.x == 7) &&
 			(board_piece(board, c5) == EMPTY) &&
 			(board_piece(board, c6) == EMPTY) && !is_cord_checked(c6, color, board)) {
-			if (!add_node(&castling_moves, &big_castle, sizeof(move))) {
-				free_list(&castling_moves, free);
-				return error_moves;
-			}
+			castle.end = c5;
+			king_dest = c6;
+			
 		}
+		move_from_to(castle.board, castle.start, castle.end);
+		move_from_to(castle.board, king_loc, king_dest);
 	}
-	return castling_moves;
+	return castle;
 }
 
 /*
@@ -804,7 +794,7 @@ moves best_next_moves(settings set, int maximizer) {
 	// minimax function
 	moves best_moves = { 0 };
 	move * temp_best_move;
-	moves possible_moves = make_all_moves(set);
+	moves possible_moves = make_all_moves(&set);
 	int best_score = INT_MIN;
 	int curr_alpha = INT_MIN;
 	if (possible_moves.len == -1) { //error
@@ -818,7 +808,7 @@ moves best_next_moves(settings set, int maximizer) {
 	while (curr != NULL) {
 		//get the score of each next possible moves, according to minimax algorithm
 		settings next_set;
-		next_set.color = set.color;
+		memcpy(&next_set, &set, sizeof(settings));
 		next_set.next = other_player(set.next);
 		board_copy(((move*)curr->data)->board, next_set.board);
 		int curr_score = minimax(next_set, curr_alpha, INT_MAX, FALSE, depth - 1, is_best_difficulty);
@@ -860,7 +850,7 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 		int board_score = score(set.board, scorrer, player, is_best_difficulty); //return score according to maximizing player
 		return board_score;
 	}
-	moves possible_moves = make_all_moves(set); // create all possible moves for player
+	moves possible_moves = make_all_moves(&set); // create all possible moves for player
 	if (possible_moves.len == -1) { //there was an error, return an error score
 		return SCORE_ERROR;
 	}
@@ -875,8 +865,8 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 	while (curr != NULL){ // continue recursively for each possible move
 		move * cur_move = curr->data;
 		settings next_set;
+		memcpy(&next_set, &set, sizeof(settings));
 		next_set.next = other_player(player);
-		board_copy(cur_move->board, next_set.board);
 		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
