@@ -181,7 +181,7 @@ void move_from_to(char board[BOARD_SIZE][BOARD_SIZE], cord start, cord end);
 int get_piece_score(char player_piece);
 int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece);
 int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece);
-int is_king_checked(int color, char board[BOARD_SIZE][BOARD_SIZE]);
+int is_king_checked(int colour, char board[BOARD_SIZE][BOARD_SIZE]);
 int get_best_depth(settings * set, int player);
 moves get_moves_for_piece(moves all_possible_moves, cord c);
 move get_castling_move(settings * set, cord curr, int color);
