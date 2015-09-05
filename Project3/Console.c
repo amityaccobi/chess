@@ -5,7 +5,7 @@ int console_mode()
 	settings game_settings = settings_state();
 	move next_move;
 	int was_checked = FALSE;
-	check_castling_conditions(game_settings);
+	check_castling_conditions(&game_settings);
 	//game state
 	while (TRUE) {
 		// user turn
@@ -527,7 +527,7 @@ move user_turn(settings * game_settings, int was_checked) {
 			if (depth != 0) 
 				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE);
 			else // depth == 0 if best [since: atoi("best") = 0]
-				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings->board, game_settings->next) - 1, TRUE);
+				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings, game_settings->next) - 1, TRUE);
 
 			if (move_score == SCORE_ERROR){
 				free_list(&possible_moves, free);
