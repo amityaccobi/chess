@@ -12,7 +12,6 @@ typedef struct gui_tree_node{
 	SDL_Rect* offset_rect;
 	int offset_x;
 	int offset_y;
-	int is_active;
 } gui_tree_node;
 
 
