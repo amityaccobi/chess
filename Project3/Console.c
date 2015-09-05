@@ -10,11 +10,17 @@ int console_mode()
 		// user turn
 		if ((game_settings.mode == PLAYER_VS_PLAYER) || (game_settings.next == game_settings.color)) {
 			next_move = user_turn(&game_settings, was_checked);
+			if (next_move.promotion == -1) {
+				exit(0);
+			}
 		}
 		//computer turn
 		else {
 			next_move = computer_turn(&game_settings);
-			if (next_move.promotion != NO_MOVE_CODE) {
+			if (next_move.promotion == -1) {
+				exit(0);
+			}
+			else if (next_move.promotion != NO_MOVE_CODE) {
 				if (was_checked)
 					print_message(CHECK);
 				if (printf("Computer: move ") < 0) {
@@ -397,6 +403,7 @@ int print_type(char ch) {
 * * in case of an error - exit.
 */
 move user_turn(settings * game_settings, int was_checked) {
+	extern move error_move;
 	char input[51];
 	char * args;
 	move temp_move;
@@ -421,7 +428,7 @@ move user_turn(settings * game_settings, int was_checked) {
 		move_node * cur;
 		if (!read_input(input)) { //error reading input
 			free_list(&possible_moves, free);
-			exit(0);
+			return error_move;
 		}
 		cur = possible_moves.first;
 		cord_ptr = strchr(input, '<');
@@ -480,7 +487,7 @@ move user_turn(settings * game_settings, int was_checked) {
 				if (is_same_cord(((move*)(cur->data))->start, c)) {
 					if (print_move(cur->data) < 0) {
 						free_list(&possible_moves, free);
-						exit(0);
+						return error_move;
 					}
 				}
 				cur = cur->next;
@@ -492,14 +499,14 @@ move user_turn(settings * game_settings, int was_checked) {
 			moves best_moves = best_next_moves(temp_settings, temp_settings.next);
 			if (best_moves.len == -1){
 				free_list(&possible_moves, free);
-				exit(0);
+				return error_move;
 			}
 			move_node * curr_move = best_moves.first;
 			while (curr_move != NULL) {
 				if (print_move(curr_move->data) < 0){
 					free_list(&possible_moves, free);
 					free_list(&best_moves, free);
-					exit(0);
+					return error_move;
 				}
 				curr_move = curr_move->next;
 			}
@@ -517,7 +524,7 @@ move user_turn(settings * game_settings, int was_checked) {
 
 			if (move_score == SCORE_ERROR){
 				free_list(&possible_moves, free);
-				exit(0);
+				return error_move;;
 			}
 			printf("%d\n", move_score);
 		}

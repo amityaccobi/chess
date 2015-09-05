@@ -3,6 +3,7 @@
 
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
+move error_move = { 0, 0, 0, -1 };
 
 /***************/
 /**** board ****/
@@ -284,7 +285,7 @@ move computer_turn(settings * game_settings) {
 	move_node * random_best_move;
 	move best_move;
 	if (best_moves.len == -1) { // there was an error
-		exit(0);
+		return error_move;
 	}
 	if (best_moves.len == 0) { // no possible moves - player wins
 		best_move.promotion = NO_MOVE_CODE;
