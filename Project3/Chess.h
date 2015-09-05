@@ -185,6 +185,7 @@ int is_king_checked(int color, char board[BOARD_SIZE][BOARD_SIZE]);
 int get_best_depth(char board[BOARD_SIZE][BOARD_SIZE], int player);
 moves get_moves_for_piece(moves all_possible_moves, cord c);
 move get_castling_move(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color);
+void check_castling_conditions(settings * game_settings);
 
 
 #endif CHESS

@@ -258,7 +258,7 @@ settings settings_state() {
 		else if is_command(START_SETTING){
 			// start game only if board is valid
 			if (is_valid_board(game_settings.board) &&
-				((possible_moves = make_all_moves(game_settings)).len != 0)) {
+				((possible_moves = make_all_moves(&game_settings)).len != 0)) {
 				if (possible_moves.len > 0) {
 					free_list(&possible_moves, free);
 					break;
@@ -416,7 +416,7 @@ move user_turn(settings * game_settings, int was_checked) {
 	char * args;
 	move temp_move;
 	char* cord_ptr;
-	moves possible_moves = make_all_moves(*game_settings);
+	moves possible_moves = make_all_moves(game_settings);
 	settings temp_settings;
 	int move_score;
 	if (possible_moves.len == -1){ // there was an error

@@ -90,12 +90,12 @@ void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOA
 *  a method that checkes castling conditions in the end of each turn
 */
 void check_castling_conditions(settings * game_settings){
-	game_settings->white_king_moved = (white_king_moved || (game_settings->board[4][0] == WHITE_K));
-	game_settings->black_king_moved = (black_king_moved || (game_settings->board[4][7] == BLACK_K));
-	game_settings->white_rook_1_moved = (white_rook_1_moved || (game_settings->board[0][0] == WHITE_R));
-	game_settings->white_rook_2_moved = (white_rook_2_moved || (game_settings->board[7][0] == WHITE_R));
-	game_settings->black_rook_1_moved = (black_rook_1_moved || (game_settings->board[0][7] == BLACK_R));
-	game_settings->black_rook_2_moved = (black_rook_2_moved || (game_settings->board[7][7] = BLACK_R));
+	game_settings->white_king_moved = (game_settings->white_king_moved || (game_settings->board[4][0] == WHITE_K));
+	game_settings->black_king_moved = (game_settings->black_king_moved || (game_settings->board[4][7] == BLACK_K));
+	game_settings->white_rook_1_moved = (game_settings->white_rook_1_moved || (game_settings->board[0][0] == WHITE_R));
+	game_settings->white_rook_2_moved = (game_settings->white_rook_2_moved || (game_settings->board[7][0] == WHITE_R));
+	game_settings->black_rook_1_moved = (game_settings->black_rook_1_moved || (game_settings->board[0][7] == BLACK_R));
+	game_settings->black_rook_2_moved = (game_settings->black_rook_2_moved || (game_settings->board[7][7] = BLACK_R));
 }
 
 
