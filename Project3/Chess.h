@@ -85,7 +85,7 @@ typedef struct {
 	cord end;
 	char board[BOARD_SIZE][BOARD_SIZE]; // board layout in the end of the move
 	int promotion; //boolean: is promotion move
-	//	int valid; //value 0 means there are no valid moves, value -1 means there have been an error.
+	int is_castle; //boolean: is castling move
 }move; //struct representing a move on the board
 
 typedef linked_list moves;
