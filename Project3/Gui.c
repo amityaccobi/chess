@@ -528,6 +528,35 @@ int game_flow(settings *game_settings, gui_tree_node *game_panel, gui_tree_node 
 
 	check_castling_conditions(game_settings);
 	move next_move = { -1, -1 };
+	int was_checked = FALSE;
+	// game state
+	while (GAME_WINDOW){
+		if ((game_settings->mode == PLAYER_VS_PLAYER) || (game_settings->color = game_settings->next)){
+			//next_move = user_turn();
+		}
+		else{
+			next_move = computer_turn(game_settings);
+			if (next_move.promotion != NO_MOVE_CODE) {
+				/*if (was_checked)
+					print_message(CHECK);
+				if (printf("Computer: move ") < 0) {
+					perror_message("printf");
+					exit(0);
+				}
+
+				if ((print_move(&next_move) < 0)) {
+					exit(0);
+				}
+			*/}
+		}
+
+
+
+
+
+		game_settings->next = other_player(game_settings->next);
+		was_checked = game_settings->is_next_checked;
+	}
 	return listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, all_possible_moves);
 
 }
