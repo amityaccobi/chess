@@ -10,7 +10,7 @@ int black_rook_2_moved;
 
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
-move error_move = { 0, 0, 0, -1 , -1};
+move error_move = { 0, 0, 0, -1, -1 };
 
 /***************/
 /**** board ****/
@@ -194,7 +194,7 @@ int is_valid_move(moves all_valid_moves, move new_move){
 		if ((is_same_cord(curr_move->start, start)) &&
 			(is_same_cord(curr_move->end, end)) &&
 			(board_piece(curr_move->board, end) == board_piece(new_move.board, end))) //it's the same promotion
-					return i;
+			return i;
 		curr_node = curr_node->next;
 	}
 	return -1;
@@ -214,7 +214,7 @@ int load_game(char * path, settings * game_settings){
 		return FALSE;
 	xml_tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
 	fclose(fp);
-	
+
 	xml_node = mxmlFindPath(xml_tree, "game/next_turn");
 	game_settings->next = (xml_node == NULL) ? WHITE : string_to_color(mxmlGetOpaque(xml_node));
 
@@ -255,17 +255,17 @@ int save_game(char * path, settings * game_settings) {
 	fp = fopen(path, "w");
 	if (fp == NULL)
 		return FALSE;
-	
+
 	tree = mxmlNewXML("1.0");
 	game_node = mxmlNewElement(tree, "game");
 	mxmlNewInteger(mxmlNewElement(game_node, "game_mode"), game_settings->mode);
 	mxmlNewOpaque(mxmlNewElement(game_node, "user_color"), color_string(game_settings->color));
 	mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next));
-	
+
 	if (game_settings->minimax_depth == BEST_DIFFICULTY)
 		mxmlNewOpaque(mxmlNewElement(game_node, "user_color"), "best");
 	else
-	mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth);
+		mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth);
 
 	board_node = mxmlNewElement(game_node, "board");
 
@@ -345,9 +345,9 @@ moves make_all_moves(settings set){
 				if (simple_moves.len == -1){ // get_simple_moves had an error
 					free_list(&all_moves, &free);
 					return simple_moves;
-					}
+				}
 				else{// if (simple_moves.len != 0) 
-						concat(&all_moves, simple_moves);
+					concat(&all_moves, simple_moves);
 				}
 			}
 		}
@@ -372,7 +372,7 @@ moves get_simple_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr){
 		return pawn_moves(board, curr, color);
 	case BISHOP:
 		return bishop_moves(board, curr, color, FALSE);
-	case ROOK: 
+	case ROOK:
 		return rook_moves(board, curr, color, FALSE);
 	case KNIGHT:
 		return knight_moves(board, curr, color);
@@ -426,22 +426,22 @@ int is_cord_checked(cord c, int color, char board[BOARD_SIZE][BOARD_SIZE]){
 	move_cords(board, c, BOARD_SIZE, color, TRUE, FALSE, dangerous_horizontal); //find horizontal dangerous pieces
 	move_cords(board, c, BOARD_SIZE, color, FALSE, TRUE, dangerous_vertical); //find vertical dangerous pieces
 	knight_cords(board, c, color, dangerous_knight);
-	
+
 	// check if enemy's pieces that are not pawns or king threatening c
 	for (i = 0; i < 32; i++){
 		if ((is_valid_cord(dangerous_diags[i]) && ((board_piece(board, dangerous_diags[i]) == other_bishop) ||
-													(board_piece(board, dangerous_diags[i]) == other_queen))) ||
+			(board_piece(board, dangerous_diags[i]) == other_queen))) ||
 			(is_valid_cord(dangerous_horizontal[i]) && ((board_piece(board, dangerous_horizontal[i]) == other_rook) ||
-													(board_piece(board, dangerous_horizontal[i]) == other_queen)))||
+			(board_piece(board, dangerous_horizontal[i]) == other_queen))) ||
 			(is_valid_cord(dangerous_vertical[i]) && ((board_piece(board, dangerous_vertical[i]) == other_rook) ||
-													(board_piece(board, dangerous_vertical[i]) == other_queen)))||											
+			(board_piece(board, dangerous_vertical[i]) == other_queen))) ||
 			(is_valid_cord(dangerous_knight[i]) && ((board_piece(board, dangerous_knight[i]) == other_knight))))
 			return TRUE;
 	}
 	// check if emeny's pawn is threatening c
 	temp.y = c.y;
 	temp.y += (color == WHITE) ? 1 : -1;
-	for (i = -1; i <= 1; i+=2){
+	for (i = -1; i <= 1; i += 2){
 		temp.x = c.x + i;
 		if ((is_valid_cord(temp) && board_piece(board, temp) == other_pawn))
 			return TRUE;
@@ -478,9 +478,9 @@ moves pawn_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
 	moves promotions;
 	int dest_color;
 	int y_dir = (color == WHITE) ? 1 : -1;
-	
+
 	dest.y = curr.y + y_dir;
-	
+
 	for (int x = -1; x <= 1; x++) {
 		single_move = malloc(sizeof(move));
 		if (single_move == NULL) {
@@ -504,7 +504,7 @@ moves pawn_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
 				move_from_to(single_move->board, curr, dest);
 				// check if psaudo-legal move is legal
 				if (is_king_checked(color, single_move->board)) {
-					free(single_move); 
+					free(single_move);
 					continue;
 				}
 				if (dest.y == promotion_row(color)) {
@@ -523,7 +523,7 @@ moves pawn_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
 				}
 				free(single_move);
 			}
-	}
+		}
 	}
 	return piece_simple_moves;
 }
@@ -558,12 +558,12 @@ moves promote(move * single_move) {
 
 
 /*
- *	return moves. in each move:
- *			start = start_cord
- *			end = one of the cords in end_cords (there can be at most 31 end cords)
- *			board = currend board + piece moved from start to end.
- *	this method is not relevant for pawns.
- */
+*	return moves. in each move:
+*			start = start_cord
+*			end = one of the cords in end_cords (there can be at most 31 end cords)
+*			board = currend board + piece moved from start to end.
+*	this method is not relevant for pawns.
+*/
 moves cords_to_moves(cord start_cord, cord end_cords[32], char board[BOARD_SIZE][BOARD_SIZE], int color) {
 	cord end_cord;
 	int i = 0;
@@ -576,7 +576,7 @@ moves cords_to_moves(cord start_cord, cord end_cords[32], char board[BOARD_SIZE]
 			free_list(&new_moves, &free);
 			return error_moves;
 		}
-		
+
 		new_move->start = start_cord;
 		new_move->end = end_cord;
 		new_move->promotion = FALSE;
@@ -585,7 +585,7 @@ moves cords_to_moves(cord start_cord, cord end_cords[32], char board[BOARD_SIZE]
 		move_from_to(new_move->board, start_cord, end_cord);
 		// check if psaudo-legal move is legal
 		if (is_king_checked(color, new_move->board)){
-		//	free(new_move);
+			//	free(new_move);
 			continue;
 		}
 		else if (!add_node(&new_moves, new_move, sizeof(move))){
@@ -605,7 +605,7 @@ void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int
 	// initialize end_cords
 	if (DEBUG1){
 		if (curr.x < -42) {
-			printf("%s\n","NO KING!");
+			printf("%s\n", "NO KING!");
 		}
 	}
 	int i;
@@ -635,7 +635,7 @@ void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int
 	}
 }
 
-moves bishop_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king){
+moves bishop_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int is_king){
 	cord diag_cords[32];
 	int max_move = is_king ? 1 : BOARD_SIZE;
 	move_cords(board, curr, max_move, color, TRUE, TRUE, diag_cords);
@@ -643,31 +643,31 @@ moves bishop_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int 
 }
 
 
-moves rook_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king) {
+moves rook_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int is_king) {
 	int max_move = is_king ? 1 : BOARD_SIZE;
 	cord horizontal_cords[32];
 	cord vertical_cords[32];
 	move_cords(board, curr, max_move, color, TRUE, FALSE, horizontal_cords);
 	moves horizontal_moves = cords_to_moves(curr, horizontal_cords, board, color);
-	if (horizontal_moves.len == -1) 
+	if (horizontal_moves.len == -1)
 		return error_moves;
 	move_cords(board, curr, max_move, color, FALSE, TRUE, vertical_cords);
 	moves vertical_moves = cords_to_moves(curr, vertical_cords, board, color);
-		if (vertical_moves.len == -1) {
-			free_list(&horizontal_moves, &free);
-			return error_moves;
-		}
-		else
-			concat(&horizontal_moves, vertical_moves);
+	if (vertical_moves.len == -1) {
+		free_list(&horizontal_moves, &free);
+		return error_moves;
+	}
+	else
+		concat(&horizontal_moves, vertical_moves);
 	return horizontal_moves;
 }
 
-moves queen_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int is_king){
+moves queen_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, int is_king){
 	moves all_simple_moves = bishop_moves(board, curr, color, is_king);
 	if (all_simple_moves.len == -1)
 		return error_moves;
 	moves more_moves = rook_moves(board, curr, color, is_king);
-	if (more_moves.len == -1) { 
+	if (more_moves.len == -1) {
 		free_list(&all_simple_moves, &free);
 		return error_moves;
 	}
@@ -676,7 +676,7 @@ moves queen_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color, int i
 	return all_simple_moves;
 }
 
-moves king_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr,int color) {
+moves king_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color) {
 	moves all_king_moves;
 	moves castling_moves;
 
@@ -704,7 +704,7 @@ moves get_castling_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int colo
 	move big_castle;
 	move small_castle;
 	moves castling_moves = { 0 };
-	
+
 	big_castle.start = small_castle.start = curr;
 	big_castle.end = c2;
 	small_castle.end = c6;
@@ -757,16 +757,16 @@ moves knight_moves(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color){
 *		-curr: knight's location
 *		-color: knight's color
 *		-jump_cords: array of cords in which the cords will be returned
-								(the method changes the array and returns void value)
+(the method changes the array and returns void value)
 */
 
 void knight_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, cord jump_cords[32]) {
-	int i, j,k,l, x, y;
+	int i, j, k, l, x, y;
 	for (i = 0; i < 32; i++){
 		jump_cords[i] = error_cord;
 	}
 	l = 0;
-	for (i = -1; i <= 1; i+=2) {
+	for (i = -1; i <= 1; i += 2) {
 		for (j = -2; j <= 2; j += 4){
 			x = i, y = j;
 			for (k = 0; k < 2; k++){
@@ -778,7 +778,7 @@ void knight_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, cord
 					jump_cords[l++] = jump_to;
 			}
 		}
-		}
+	}
 }
 
 /*
@@ -810,7 +810,7 @@ moves best_next_moves(settings set, int maximizer) {
 	if (possible_moves.len == -1) { //error
 		return possible_moves;
 	}
-	
+
 	int is_best_difficulty = (set.minimax_depth == BEST_DIFFICULTY);
 	int depth = (!is_best_difficulty) ? set.minimax_depth : get_best_depth(set.board, maximizer);
 
@@ -833,7 +833,7 @@ moves best_next_moves(settings set, int maximizer) {
 		if (curr_score > best_score) { // if new score is higher - free previous best moves
 			free_list(&best_moves, &free);
 			best_score = curr_score;
-		}				
+		}
 		if (!(curr_score < best_score)) {
 			if (!add_node(&best_moves, temp_best_move, sizeof(move))) {
 				free_list(&best_moves, &free);
@@ -888,7 +888,7 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 			alpha = maxi(alpha, minimax_score);
 		else
 			beta = mini(beta, minimax_score);
-		if (beta <= alpha) 
+		if (beta <= alpha)
 			break; //pruning
 		curr = curr->next;
 	}
@@ -937,7 +937,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_pl
 			char cur_piece = board_piece(board, piece);
 			if (cur_piece == EMPTY)
 				continue;
-			
+
 			int piece_color = which_color(cur_piece);
 			is_scoring_piece = (piece_color == scoring_player);
 
@@ -985,7 +985,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int scoring_player, int current_pl
 		total_score = WIN_SCORE;
 
 	//RELEVANT ONLY FOR best DIFFICULTY!
-	else if (is_best && is_scoring_checked) { 
+	else if (is_best && is_scoring_checked) {
 		if (is_scoring_checked)
 			return LOSE_SCORE + 42;
 		else if (is_other_checked)
