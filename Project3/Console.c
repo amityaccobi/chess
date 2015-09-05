@@ -483,12 +483,20 @@ move user_turn(settings * game_settings, int was_checked) {
 			else if (which_color(board_piece(game_settings->board, c)) != game_settings->next) {
 				print_message(NO_DICS);
 			}
+			moves_for_piece = get_moves_for_piece(possible_moves, c);
+			cur = possible_moves.first;
 			while (cur != NULL) {
+<<<<<<< HEAD
 				if (is_same_cord(((move*)(cur->data))->start, c)) {
 					if (print_move(cur->data) < 0) {
 						free_list(&possible_moves, free);
 						return error_move;
 					}
+=======
+				if (print_move(cur->data) < 0) {
+					free_list(&possible_moves,free);
+					free_list(&moves_for_piece, free);
+>>>>>>> 3914c9bd61d3a6e44157eb1f624837b215eb8893
 				}
 				cur = cur->next;
 			}

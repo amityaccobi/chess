@@ -157,7 +157,6 @@ settings settings_state();
 void remove_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece);
 void add_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece, int color, char type);
 move computer_turn(settings * game_settings);
-linked_list get_max_eat(char board[BOARD_SIZE][BOARD_SIZE], cord start, int max_eat, int is_chain);
 int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, int is_best_difficulty);
 moves best_next_moves(settings set, int maximizer);
 void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int color, int move_x, int move_y, cord move_cords[32]);
