@@ -149,7 +149,6 @@ settings settings_state() {
 	moves possible_moves;
 	settings game_settings;
 
-
 	//default settings:
 	game_settings.color = user_color;
 	game_settings.minimax_depth = depth;
@@ -332,15 +331,21 @@ move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]){
 * returns 1 if succeded, otherwise return -1.
 */
 int print_move(move * move0) {
+	int castle = move0->is_castle;
+
+	if (castle && (printf("%s", "castle") < 0)) {
+		perror_message("printf");
+		return -1;
+	}
 	if (print_cord(move0->start) < 0) {
 		perror_message("printf");
 		return -1;
 	}
-	if (printf(" to ") < 0) {
+	if (castle || printf("%s", " to ") < 0) {
 		perror_message("printf");
 		return -1;
 	}
-	if (print_cord(move0->end) < 0) {
+	if (castle || print_cord(move0->end) < 0) {
 		perror_message("printf");
 		return -1;
 	}
@@ -409,7 +414,6 @@ move user_turn(settings * game_settings, int was_checked) {
 	move temp_move;
 	char* cord_ptr;
 	moves possible_moves = make_all_moves(*game_settings);
-	moves moves_for_piece;
 	settings temp_settings;
 	int move_score;
 	if (possible_moves.len == -1){ // there was an error
@@ -483,20 +487,12 @@ move user_turn(settings * game_settings, int was_checked) {
 			else if (which_color(board_piece(game_settings->board, c)) != game_settings->next) {
 				print_message(NO_DICS);
 			}
-			moves_for_piece = get_moves_for_piece(possible_moves, c);
-			cur = possible_moves.first;
 			while (cur != NULL) {
-<<<<<<< HEAD
 				if (is_same_cord(((move*)(cur->data))->start, c)) {
 					if (print_move(cur->data) < 0) {
 						free_list(&possible_moves, free);
 						return error_move;
 					}
-=======
-				if (print_move(cur->data) < 0) {
-					free_list(&possible_moves,free);
-					free_list(&moves_for_piece, free);
->>>>>>> 3914c9bd61d3a6e44157eb1f624837b215eb8893
 				}
 				cur = cur->next;
 			}

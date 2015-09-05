@@ -1018,4 +1018,3 @@ int get_piece_score(char player_piece) {
 		return 0;
 	}
 }
-
