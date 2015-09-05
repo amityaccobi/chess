@@ -148,13 +148,14 @@ settings settings_state() {
 	int user_color = WHITE;
 	char input[51];
 	moves possible_moves;
-	settings game_settings;
+	settings game_settings = { 0 };
 
 	//default settings:
 	game_settings.color = user_color;
 	game_settings.minimax_depth = depth;
 	game_settings.mode = mode;
 	game_settings.next = next;
+
 	clear(game_settings.board);
 	init_board(game_settings.board);
 	if (!print_board(game_settings.board))
@@ -417,6 +418,7 @@ move user_turn(settings * game_settings, int was_checked) {
 	move temp_move;
 	char* cord_ptr;
 	moves possible_moves = make_all_moves(game_settings);
+	moves moves_for_cord;
 	settings temp_settings;
 	int move_score;
 	if (possible_moves.len == -1){ // there was an error
@@ -480,6 +482,34 @@ move user_turn(settings * game_settings, int was_checked) {
 				return to_play;
 			}
 		}
+		// parse: castle <x,y>            ///CHECK IF MATCHING TO FLOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CHECK CHECK CHECK BLAH TODO
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		else if (is_command_with_args(CASTLE)){
+			cord c = parse_cord(args);
+			if (c.x == c.y == -1) {
+				free_list(&possible_moves, free);
+				return error_move;
+			}
+			else if (!is_valid_cord(c))
+				print_message(WRONG_POSITION);
+			else if (tolower(board_piece(game_settings->board, c)) != ROOK)
+				print_message(WRONG_ROOK_POSITION);
+			else {
+				move_node * curr = possible_moves.first;
+				while (curr != NULL) {
+					move cur_move = *(move *)(curr->data);
+					if (is_same_cord(c, cur_move.start) && cur_move.is_castle){
+						board_copy(cur_move.board, game_settings->board);
+						free_list(&possible_moves, free);
+						game_settings->is_next_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
+						return cur_move;
+					}
+					curr = curr->next;
+				}
+				print_message(ILLEGAL_CALTLING_MOVE);
+			}
+		}
 		// parse: get_moves <x,y>
 		else if (is_command_with_args(GET_MOVES)) {
 			cord c = parse_cord(cord_ptr);
@@ -489,15 +519,23 @@ move user_turn(settings * game_settings, int was_checked) {
 			}
 			else if (which_color(board_piece(game_settings->board, c)) != game_settings->next) {
 				print_message(NO_DICS);
+				continue;
 			}
-			while (cur != NULL) {
-				if (is_same_cord(((move*)(cur->data))->start, c)) {
-					if (print_move(cur->data) < 0) {
-						free_list(&possible_moves, free);
-						return error_move;
-					}
+			else {
+				moves_for_cord = get_moves_for_piece(possible_moves, c);
+				if (moves_for_cord.len == -1) {
+					free_list(&possible_moves, free);
+					return error_move;
 				}
-				cur = cur->next;
+				cur = moves_for_cord.first;
+				while (cur != NULL) {
+						if (print_move(cur->data) < 0) {
+							free_list(&possible_moves, free);
+							return error_move;
+						}
+					cur = cur->next;
+				}
+				free_list(&moves_for_cord, free);
 			}
 		}
 		// parse: get_best_moves d

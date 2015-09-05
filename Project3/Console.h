@@ -15,6 +15,7 @@
 #define PRINT_SETTING "print"
 #define START_SETTING "start"
 #define MOVE "move <"
+#define CASTLE "castle <"
 #define GET_MOVES "get_moves <"
 #define BEST_MOVES "get_best_moves "
 #define GET_SCORE "get_score "

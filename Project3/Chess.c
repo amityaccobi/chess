@@ -90,12 +90,12 @@ void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOA
 *  a method that checkes castling conditions in the end of each turn
 */
 void check_castling_conditions(settings * game_settings){
-	game_settings->white_king_moved = (game_settings->white_king_moved || (game_settings->board[4][0] == WHITE_K));
-	game_settings->black_king_moved = (game_settings->black_king_moved || (game_settings->board[4][7] == BLACK_K));
-	game_settings->white_rook_1_moved = (game_settings->white_rook_1_moved || (game_settings->board[0][0] == WHITE_R));
-	game_settings->white_rook_2_moved = (game_settings->white_rook_2_moved || (game_settings->board[7][0] == WHITE_R));
-	game_settings->black_rook_1_moved = (game_settings->black_rook_1_moved || (game_settings->board[0][7] == BLACK_R));
-	game_settings->black_rook_2_moved = (game_settings->black_rook_2_moved || (game_settings->board[7][7] = BLACK_R));
+	game_settings->white_king_moved = (game_settings->white_king_moved | (game_settings->board[4][0] != WHITE_K));
+	game_settings->black_king_moved = (game_settings->black_king_moved || (game_settings->board[4][7] != BLACK_K));
+	game_settings->white_rook_1_moved = (game_settings->white_rook_1_moved || (game_settings->board[0][0] != WHITE_R));
+	game_settings->white_rook_2_moved = (game_settings->white_rook_2_moved || (game_settings->board[7][0] != WHITE_R));
+	game_settings->black_rook_1_moved = (game_settings->black_rook_1_moved || (game_settings->board[0][7] != BLACK_R));
+	game_settings->black_rook_2_moved = (game_settings->black_rook_2_moved || (game_settings->board[7][7] != BLACK_R));
 }
 
 
@@ -660,7 +660,7 @@ moves rook_moves(settings  * set, cord curr, int color, int is_king) {
 		concat(&horizontal_moves, vertical_moves);
 	if (tolower(board_piece(set->board, curr)) == ROOK) {//check if need to castle
 		castle_move = get_castling_move(set, curr, color);
-		if (castle_move.promotion != -1 && !add_node(&horizontal_moves, &castle_move, sizeof(move))) {
+		if (castle_move.promotion == -1 || !add_node(&horizontal_moves, &castle_move, sizeof(move))) {
 			free_list(&horizontal_moves, &free);
 			return error_moves;
 		}
@@ -698,18 +698,17 @@ move get_castling_move(settings  * set, cord curr, int color) {
 	cord king_dest;
 	cord king_loc = { 4, (color == WHITE) ? 0 : 7 };
 
-	castle.start = curr;
-	castle.is_castle = TRUE;
-	castle.promotion = FALSE;
-	board_copy(set->board, castle.board);
-
 	int king_moved = (color == WHITE) ? set->white_king_moved : set->black_king_moved;
 	int rook1_moved = (color == WHITE) ? set->white_rook_1_moved : set->black_rook_1_moved;
 	int rook2_moved = (color == WHITE) ? set->white_rook_2_moved : set->black_rook_2_moved;
 
-	int relevant_rook_moved = (!rook1_moved && (curr.x == 0) || !rook2_moved && (curr.x == 7));
+	int relevant_rook_moved = ((rook1_moved && (curr.x == 0)) || (rook2_moved && (curr.x == 7)));
 
 	if (!king_moved && !is_king_checked(color, set->board) && !relevant_rook_moved) {
+		castle.start = curr;
+		castle.is_castle = TRUE;
+		castle.promotion = FALSE;
+		board_copy(set->board, castle.board);
 		if ((curr.x == 0) &&  //relevant rook is rook1 (big castle)
 			((board_piece(set->board, c1) == EMPTY) &&
 			(board_piece(set->board, c2) == EMPTY) &&
