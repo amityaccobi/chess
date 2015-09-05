@@ -147,8 +147,8 @@ moves get_moves_for_piece(moves all_possible_moves, cord c) {
 				free_list(&moves_for_piece, free);
 				return error_moves;
 			}
-			curr_node = curr_node->next;
 		}
+		curr_node = curr_node->next;
 	}
 	return moves_for_piece;
 }

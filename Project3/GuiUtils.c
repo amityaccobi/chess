@@ -57,7 +57,7 @@ int create_panel(int x_offset, int y_offset, int width, int height, gui_tree_nod
 
 //creating an image and connecting it to its parent in the UI tree, return if succeeded
 int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
-	Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent){
+	Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent, int active){
 	gui_tree_node img;
 	SDL_Rect img_rect;
 
@@ -80,14 +80,15 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 	img_rect.w = width;
 	img_rect.h = height;
 	SDL_SetClipRect(img.surface, &img_rect);
+	img.is_active = active;
 	return add_child(&img, parent);
 }
 
 //creating a button and connecting it to its parent in the UI tree, return if succeeded
-int create_button(Sint16 x_offset, Sint16 y_offset, Sint16 x_rect, Sint16 y_rect,
-					Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent){
-	return create_image(x_offset, y_offset, x_rect, y_rect, width, height, image_surface, parent);
-}
+/*int create_button(Sint16 x_offset, Sint16 y_offset, Sint16 x_rect, Sint16 y_rect,
+	Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent, int marked){
+	return create_image(x_offset, y_offset, x_rect, y_rect, width, height, image_surface, parent, marked);
+}*/
 
 // draw the whole UI tree
 int draw_tree(gui_tree_node * tree_root) {

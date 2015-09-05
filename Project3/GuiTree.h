@@ -12,13 +12,9 @@ typedef struct gui_tree_node{
 	SDL_Rect* offset_rect;
 	int offset_x;
 	int offset_y;
+	int is_active;
 } gui_tree_node;
 
-
-gui_tree_node* window;
-SDL_Surface* buttons_img;
-SDL_Surface* board_img;
-SDL_Surface* tools_img;
 
 int add_child(gui_tree_node* child, gui_tree_node* parent);
 void free_tree(gui_tree_node* parent);
