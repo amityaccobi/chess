@@ -18,5 +18,6 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation, U
 int draw_gui_tree_node(gui_tree_node* gui_tree_node);
 int is_inside_gui_tree_node(gui_tree_node* gui_tree_node, int x, int y);
 int draw_tree(gui_tree_node * tree_root);
+int create_dialog_window(int width, int height, gui_tree_node* parent);
 
 #endif

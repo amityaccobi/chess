@@ -21,6 +21,33 @@ gui_tree_node* create_window(int width, int height){
 	return window;
 }
 
+//return a dialog window (child of the root of the UI tree)
+int create_dialog_window(int width, int height, gui_tree_node* parent){
+	gui_tree_node dialog_window = { 0 };
+	dialog_window.parent = parent;
+	dialog_window.children.len = 0;
+	dialog_window.offset_x = 0;
+	dialog_window.offset_y = 0;
+	dialog_window.offset_rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
+	if (dialog_window.offset_rect == NULL) {
+		//printf("ERROR: failed to allocate memory.");
+		free(dialog_window.surface);
+		return FALSE;
+	}
+	dialog_window.offset_rect->x = 0;
+	dialog_window.offset_rect->y = 0;
+	dialog_window.offset_rect->h = height;
+	dialog_window.offset_rect->w = width;
+
+	dialog_window.surface = SDL_SetVideoMode(width, height, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	if (dialog_window.surface == NULL){
+		printf("window creation failed: %s\n", SDL_GetError());
+		free(dialog_window.offset_rect);
+		return FALSE;
+	}
+	return add_child(&dialog_window, parent);
+}
+
 //creating a pannel and connecting it to its parent in the UI tree, return if succeeded
 int create_panel(int x_offset, int y_offset, int width, int height, gui_tree_node* parent){
 	gui_tree_node panel;
@@ -38,7 +65,7 @@ int create_panel(int x_offset, int y_offset, int width, int height, gui_tree_nod
 	amask = 0xff000000;
 #endif
 
-	panel.surface = SDL_CreateRGBSurface(0, width, height, 32, rmask, gmask, bmask, amask);
+	panel.surface = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 32, rmask, gmask, bmask, amask);
 	if (panel.surface == NULL){
 		return FALSE;
 		//printf("error: memory allocation failed \n");
@@ -52,6 +79,13 @@ int create_panel(int x_offset, int y_offset, int width, int height, gui_tree_nod
 	}
 	panel.offset_rect->x = x_offset;
 	panel.offset_rect->y = y_offset;
+	panel.offset_rect->h = height;
+	panel.offset_rect->w = width;
+
+	if (SDL_SetAlpha(panel.surface, 0, 0) != 0) {
+		printf("ERROR: failed to set alpha properties for panel: %s\n", SDL_GetError());
+	}
+
 	return add_child(&panel, parent);
 }
 
@@ -91,8 +125,8 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 
 // draw the whole UI tree
 int draw_tree(gui_tree_node * tree_root) {
-	node *current_node;
-	gui_tree_node *current_child;
+	node *current_node = NULL;
+	gui_tree_node *current_child = NULL;
 	current_node = tree_root->children.first;
 	while ((current_node != NULL) && (tree_root->children.len != 0)){
 		current_child = current_node->data;

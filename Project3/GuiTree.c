@@ -20,3 +20,9 @@ void free_tree(gui_tree_node* root) {
 		free(root);
 	}
 }
+
+void free_tree_without_root(gui_tree_node* root) {
+	if (root != NULL) {
+		free_list(&root->children, free_tree);
+	}
+}
