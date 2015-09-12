@@ -2,11 +2,15 @@
 #include "Gui.h"
 
 int main(int argc, char * argv[]) {
-	srand((int)time(0)); // for random choose between same-score moves
-
-	return main_gui();
-	//return console_mode();
-
+	srand((int)time(0)); 
+	printf("Console or GUI? (c/g)\n");
+	char c[2];
+	scanf("%s", c);
+	if (c[0] == 'c')
+		return console_mode();
+	else 
+		return main_gui();
+	
 	while (TRUE) {
 		//	if (argc > 2) {
 		//			printf("TWO ARGS PLEASE");

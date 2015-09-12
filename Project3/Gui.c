@@ -30,6 +30,13 @@ int main_gui(){
 	game_settings.minimax_depth = 1;
 	game_settings.next = WHITE;
 	game_settings.mode = 1;
+	/*
+	buttons_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/buttons3.bmp");
+	popup_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/popup2.bmp");
+	board_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/board.bmp");
+	tools_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/tools2.bmp");
+	*/
+
 	buttons_img = SDL_LoadBMP("sprites/buttons3.bmp");
 	if (buttons_img == NULL){
 		exit(0);
