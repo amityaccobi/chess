@@ -31,9 +31,21 @@ int main_gui(){
 	game_settings.next = WHITE;
 	game_settings.mode = 1;
 	buttons_img = SDL_LoadBMP("sprites/buttons3.bmp");
+	if (buttons_img == NULL){
+		exit(0);
+	}
 	popup_img = SDL_LoadBMP("sprites/popup2.bmp");
+	if (popup_img == NULL){
+		exit(0);
+	}
 	board_img = SDL_LoadBMP("sprites/board.bmp");
+	if (board_img == NULL){
+		exit(0);
+	}
 	tools_img = SDL_LoadBMP("sprites/tools2.bmp");
+	if (tools_img == NULL){
+		exit(0);
+	}
 	cur_window = MAIN_WINDOW;
 	last_window = MAIN_WINDOW;
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE];
@@ -1430,7 +1442,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	int frame_offset = 33;
 	//last_window = window;
 	moves comp_moves = { 0 };
-	moves all_possible_moves = make_all_moves(game_settings);
 
 	check_castling_conditions(game_settings);
 	int was_checked = FALSE;
@@ -1478,6 +1489,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		//free_tree(last_window);
 	}
 
+	moves all_possible_moves = make_all_moves(game_settings);
 	while (SDL_WaitEvent(&event)){
 		switch (event.type){
 		case(SDL_MOUSEBUTTONUP) :
@@ -1500,6 +1512,17 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							free_list(&all_possible_moves,free);
 							//free(last_window);
 							return FALSE;
+						}
+						if (moves_for_piece.len == 0){ //there are no possible moves->clean markings
+							if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools,
+								piece_cord, moves_for_piece, FALSE)){
+
+								free_list(&all_possible_moves, free);
+								free_list(&moves_for_piece, free);
+								//free_tree(last_window);
+								return FALSE;
+							}
+							to_move = FALSE;
 						}
 						if (moves_for_piece.len > 0){ //mark possible moves
 							if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools,
