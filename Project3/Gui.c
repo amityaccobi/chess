@@ -1501,9 +1501,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							//free(last_window);
 							return FALSE;
 						}
-						//mark possible moves
-						if (moves_for_piece.len > 0){
-							if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools, piece_cord, moves_for_piece, FALSE)){
+						if (moves_for_piece.len > 0){ //mark possible moves
+							if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools,
+																	piece_cord, moves_for_piece, FALSE)){
+
 								free_list(&all_possible_moves, free);
 								free_list(&moves_for_piece, free);
 								//free_tree(last_window);
@@ -1511,10 +1512,11 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							}
 							to_move = TRUE;
 						}
-						next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, get_best_move_button, &all_possible_moves, to_move, &moves_for_piece);
+						next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button, 
+									quit_button, board_tools, get_best_move_button, &all_possible_moves, to_move, &moves_for_piece);
 
+						//free all moves lists
 						if (moves_of_piece->len>0){
-							free_list(&all_possible_moves, free);
 							free_list(moves_of_piece, free);
 						}
 						if (all_piece_possible_moves->len>0){
