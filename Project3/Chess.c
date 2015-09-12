@@ -41,6 +41,31 @@ void clear(char board[BOARD_SIZE][BOARD_SIZE]) {
 	}
 }
 
+//check if board is valid for "set board window"
+// check 3 things: 1. only one king, 2. no more than allowed pieces
+// for every piece, 3.no pawns in row 0 and 7
+int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]){
+	char piece[12] = { 'm', 'b', 'n','r','q','k','M','B','N','R','Q','K' };
+	int i, j;
+	int first_row = 0;
+	int last_row = 7;
+	//1. only one king
+	if (!is_valid_board(board))
+		return FALSE;
+	//2. no more than allowed pieces for every piece
+	for (i = 0; i < 12; i++){
+		if (is_over_max(board, piece[i]))
+			return FALSE;
+	}
+	//3.no pawns in row 0 and 7
+	for (j = 0; j < BOARD_SIZE; j++){
+		if ((board[j][first_row] == 'p') || (board[j][first_row] == 'P')
+			|| (board[j][last_row] == 'p') || (board[j][last_row] == 'p'))
+			return FALSE;
+	}
+	return TRUE;
+	
+}
 //check if board is valid for starting the game
 int is_valid_board(char board[BOARD_SIZE][BOARD_SIZE]) {
 	return ((piece_count(board, WHITE_K) == 1) &&
@@ -1005,5 +1030,26 @@ int get_piece_score(char player_piece) {
 		return KING_SCORE;
 	default:
 		return 0;
+	}
+}
+
+move get_best_move(settings * game_settings) {
+	moves best_moves = best_next_moves(*game_settings, game_settings->next); //find next move
+	move_node * random_best_move;
+	move best_move;
+	if (best_moves.len == -1) { // there was an error
+		return error_move;
+	}
+	else { // play best_move
+		int r = rand() % best_moves.len;
+		random_best_move = best_moves.first;
+		for (int i = 0; i < r; i++) {
+			random_best_move = random_best_move->next;
+		};
+		best_move = *(move*) random_best_move->data;
+		//board_copy(best_move->board, game_settings->board);
+		free_list(&best_moves, &free);
+		//game_settings->is_next_checked = (is_king_checked(other_player(game_settings->next), game_settings->board));
+		return best_move;
 	}
 }

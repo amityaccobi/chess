@@ -186,6 +186,7 @@ int get_best_depth(settings * set, int player);
 moves get_moves_for_piece(moves all_possible_moves, cord c);
 move get_castling_move(settings * set, cord curr, int color);
 void check_castling_conditions(settings * game_settings);
-
+int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]);
+move get_best_move(settings * game_settings);
 
 #endif CHESS
