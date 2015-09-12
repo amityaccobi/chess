@@ -687,9 +687,9 @@ moves rook_moves(settings  * set, cord curr, int color, int is_king) {
 		castle_move = get_castling_move(set, curr, color);
 		if (castle_move.is_castle == TRUE)
 			if (!add_node(&horizontal_moves, &castle_move, sizeof(move))) {
-			free_list(&horizontal_moves, &free);
-			return error_moves;
-		}
+				free_list(&horizontal_moves, &free);
+				return error_moves;
+			}
 	}
 	return horizontal_moves;
 }
@@ -730,7 +730,10 @@ move get_castling_move(settings  * set, cord curr, int color) {
 
 	int relevant_rook_moved = ((rook1_moved && (curr.x == 0)) || (rook2_moved && (curr.x == 7)));
 
-	if (!king_moved && !is_king_checked(color, set->board) && !relevant_rook_moved) {
+	if ((is_same_cord(curr, c0) || is_same_cord(curr, c7)) &&	// if rook is not on one of these cords - cannot castle
+		!king_moved &&											//if king moved - cannot castle
+		!is_king_checked(color, set->board) &&					//if king is checked - cannot castle
+		!relevant_rook_moved) {									//if relevant rook moved - cannot castle
 
 		if (curr.x == 0) { //relevant rook is rook1 (big castle)
 			if (((board_piece(set->board, c1) == EMPTY) &&
