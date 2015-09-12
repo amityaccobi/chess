@@ -23,7 +23,7 @@ int main_gui(){
 
 
 
-	settings game_settings;
+	settings game_settings = { 0 };
 	int cur_window, last_window;
 	init_board(game_settings.board);
 	game_settings.color = WHITE;
@@ -1430,6 +1430,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	int frame_offset = 33;
 	//last_window = window;
 	moves comp_moves = { 0 };
+	moves all_possible_moves = make_all_moves(game_settings);
 
 	check_castling_conditions(game_settings);
 	int was_checked = FALSE;
@@ -1485,6 +1486,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			if (is_inside_gui_tree_node(game_panel, event.button.x, event.button.y)){
 				i = (event.button.x - frame_offset) / SQUARE_SIZE;
 				j = 7 - ((event.button.y - frame_offset) / SQUARE_SIZE);
+				
 				//check if there was a click inside the board controls
 				if (is_inside_gui_tree_node(&board_tools[i][j], (event.button.x), (event.button.y))){
 					cord piece_cord = { i, j };
@@ -1493,24 +1495,26 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					//click on a piece inorder to start moving:
 					// check that the click was on a relavant color-wise piece
 					if (piece_color == game_settings->next){
-						moves all_possible_moves = make_all_moves(game_settings);
 						moves moves_for_piece = get_moves_for_piece(all_possible_moves, piece_cord);
 						if (moves_for_piece.len == -1){
+							free_list(&all_possible_moves,free);
 							//free(last_window);
 							return FALSE;
 						}
 						//mark possible moves
 						if (moves_for_piece.len > 0){
 							if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools, piece_cord, moves_for_piece, FALSE)){
+								free_list(&all_possible_moves, free);
+								free_list(&moves_for_piece, free);
 								//free_tree(last_window);
 								return FALSE;
 							}
 							to_move = TRUE;
 						}
-						//free_list(&moves_for_piece, free);
 						next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, get_best_move_button, &all_possible_moves, to_move, &moves_for_piece);
-						//return GAME_WINDOW;
+
 						if (moves_of_piece->len>0){
+							free_list(&all_possible_moves, free);
 							free_list(moves_of_piece, free);
 						}
 						if (all_piece_possible_moves->len>0){
