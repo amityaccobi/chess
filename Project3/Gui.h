@@ -23,6 +23,7 @@
 #define CHECK_MASSAGE 0
 #define MATE_MESSAGE 200
 #define INVALID_SET_MASSAGE 400
+#define TIE_MASSAGE 600
 
 #define GUI_SAVE 3
 #define GUI_LOAD 2

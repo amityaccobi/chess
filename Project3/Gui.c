@@ -6,7 +6,7 @@ extern moves error_moves;
 extern move error_move;
 extern cord error_cord;
 move player_move = { -1, -1 };
-
+int game_over = FALSE;
 
 gui_tree_node* window = NULL;
 gui_tree_node* dialog_window = NULL;
@@ -445,6 +445,7 @@ int listener_to_Settings_window(settings *default_settings, gui_tree_node *color
 				return PLAYER_SELECTION_WINDOW;
 			}
 			else if (is_inside_gui_tree_node(ok_button, eventt.button.x, eventt.button.y)){
+				check_castling_conditions(default_settings);
 				return GAME_WINDOW;
 			}
 			else if (is_inside_gui_tree_node(set_board_button, eventt.button.x, eventt.button.y)){
@@ -566,11 +567,11 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 		return FALSE;
 	}
 
-	//free_tree(last_window);
+	free_tree(last_window);
 	//return listener_to_set_board_window(game_settings, game_panel, side_panel, add_button, move_button, start_button, remove_button, cancel_button, tools_to_add, board_tools, FALSE, error_cord,FALSE);// , &empty_moves, FALSE, &empty_moves);
 	int next_window = listener_to_set_board_window(game_settings, game_panel, side_panel, add_button,
 			move_button, start_button, remove_button, cancel_button, board_tools, FALSE, error_cord, FALSE);
-	free_tree(last_window);
+	
 	return next_window;
 }
 
@@ -602,6 +603,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 			
 			// the start button was clicked -> go to game window
 			else if (is_inside_gui_tree_node(start_button, event.button.x, event.button.y)){
+				check_castling_conditions(game_settings);
 				return GAME_WINDOW;
 			}
 			
@@ -1443,6 +1445,7 @@ int draw_board(settings *game_settings, gui_tree_node *panel,gui_tree_node board
 int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel, gui_tree_node *save_button,
 	gui_tree_node *main_menu_button, gui_tree_node *quit_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
 	gui_tree_node *get_best_move_button, moves *all_piece_possible_moves, int to_move, moves *moves_of_piece){
+
 	//gui_tree_node * last_window;
 	SDL_Event event;
 	int i, j, piece_color, next_window;
@@ -1459,11 +1462,23 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		player_move = computer_turn(game_settings);
 		if (player_move.promotion != NO_MOVE_CODE) {
 			if (was_checked){
-				if (!create_popup(&game_settings, 0, CHECK_MASSAGE)){
+				if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
 					return FALSE;
 				}
 			}
-			
+			else{
+				if (!create_popup(&game_settings, 0, TIE_MASSAGE)){
+					return FALSE;
+				}
+			}
+			game_over = TRUE;
+			check_castling_conditions(game_settings);
+			return GAME_WINDOW;
+		}
+		else if (was_checked){
+			if (!create_popup(&game_settings, 0, CHECK_MASSAGE)){
+				return FALSE;
+			}
 		}
 
 		///next 2 lines needs to move to end with player_turn
@@ -1497,12 +1512,36 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	}
 
 	moves all_possible_moves = make_all_moves(game_settings);
+	if (all_possible_moves.len == -1){
+		/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++FREEEEEEE STUUUUUUUUUUUUUUFFFFFFFFFFFFFFFFF+++++++++++++++*/
+	}
+	//check for mate/tie/check
+	if (all_possible_moves.len == 0){
+		if (game_settings->is_next_checked){
+			if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
+				return FALSE;
+			}
+		}
+		else{
+			if (!create_popup(&game_settings, 0, TIE_MASSAGE)){
+				return FALSE;
+			}
+			game_over = TRUE;
+			check_castling_conditions(game_settings);
+			return GAME_WINDOW;
+		}
+	}
+	else if (game_settings->is_next_checked){
+		if (!create_popup(&game_settings, 0, CHECK_MASSAGE)){
+			return FALSE;
+		}
+	}
 	while (SDL_WaitEvent(&event)){
 		switch (event.type){
 		case(SDL_MOUSEBUTTONUP) :
 
 			//check if there was a click on the game panel
-			if (is_inside_gui_tree_node(game_panel, event.button.x, event.button.y)){
+			if ((is_inside_gui_tree_node(game_panel, event.button.x, event.button.y))&&(!game_over)){
 				i = (event.button.x - frame_offset) / SQUARE_SIZE;
 				j = 7 - ((event.button.y - frame_offset) / SQUARE_SIZE);
 				
@@ -1625,12 +1664,13 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 
 						//free_tree(last_window);
 						//finishing settings
+						game_settings->is_next_checked = is_king_checked(other_player(game_settings->next),game_settings->board);
 						game_settings->next = other_player(game_settings->next);
-						was_checked = game_settings->is_next_checked;
 						free_list(moves_of_piece, free);
 						*moves_of_piece = empty_moves;
 
-						next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, get_best_move_button, all_piece_possible_moves, to_move, moves_of_piece);
+						next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, 
+							main_menu_button, quit_button, board_tools, get_best_move_button, all_piece_possible_moves, to_move, moves_of_piece);
 						/*if (moves_of_piece->len>0){
 							free_list(moves_of_piece, free);
 						}
@@ -1704,7 +1744,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					}
 				}
 				//click on best move control
-				else if (is_inside_gui_tree_node(get_best_move_button, event.button.x, event.button.y)){
+				else if ((is_inside_gui_tree_node(get_best_move_button, event.button.x, event.button.y))&&(!game_over)){
 					moves best_moves = { 0 };
 					move_node *node = NULL;
 					node = (move_node*)malloc(sizeof(move_node));

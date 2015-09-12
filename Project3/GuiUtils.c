@@ -15,7 +15,7 @@ gui_tree_node* create_window(int width, int height){
 	window->surface = SDL_SetVideoMode(width, height, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	if (window->surface == NULL){
 		printf("window creation failed: %s\n", SDL_GetError());
-		free(window);
+		free_tree(window);
 		return NULL;
 	}
 	return window;
