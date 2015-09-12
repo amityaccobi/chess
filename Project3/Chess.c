@@ -734,19 +734,24 @@ move get_castling_move(settings  * set, cord curr, int color) {
 		castle.is_castle = TRUE;
 		castle.promotion = FALSE;
 		board_copy(set->board, castle.board);
-		if ((curr.x == 0) &&  //relevant rook is rook1 (big castle)
-			((board_piece(set->board, c1) == EMPTY) &&
-			(board_piece(set->board, c2) == EMPTY) &&
-			(board_piece(set->board, c3) == EMPTY) && !is_cord_checked(c3, color, set->board))) {
-			castle.end = c3;
-			king_dest = c6;
+		if (curr.x == 0) { //relevant rook is rook1 (big castle)
+			if (((board_piece(set->board, c1) == EMPTY) &&
+				(board_piece(set->board, c2) == EMPTY) &&
+				(board_piece(set->board, c3) == EMPTY) && !is_cord_checked(c3, color, set->board))) {
+				castle.end = c3;
+				king_dest = c6;
+			}
+			else // relevant rook cannot castle
+				return castle;
 		}
-		else if ((curr.x == 7) &&
-			(board_piece(set->board, c5) == EMPTY) &&
-			(board_piece(set->board, c6) == EMPTY) && !is_cord_checked(c6, color, set->board)) {
-			castle.end = c5;
-			king_dest = c6;
-			
+		else if (curr.x == 7){ //relevanot rook is rook2 (small castle)
+			if ((board_piece(set->board, c5) == EMPTY) &&
+				(board_piece(set->board, c6) == EMPTY) && !is_cord_checked(c6, color, set->board)) {
+				castle.end = c5;
+				king_dest = c6;
+			}
+			else // relevant rook cannot castle
+				return castle;
 		}
 		move_from_to(castle.board, castle.start, castle.end);
 		move_from_to(castle.board, king_loc, king_dest);

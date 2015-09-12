@@ -5,9 +5,9 @@ int console_mode()
 	settings game_settings = settings_state();
 	move next_move;
 	int was_checked = FALSE;
-	check_castling_conditions(&game_settings);
 	//game state
 	while (TRUE) {
+		check_castling_conditions(&game_settings);
 		// user turn
 		if ((game_settings.mode == PLAYER_VS_PLAYER) || (game_settings.next == game_settings.color)) {
 			next_move = user_turn(&game_settings, was_checked);
