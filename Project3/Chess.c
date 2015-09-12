@@ -3,7 +3,7 @@
 
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
-move error_move = { 0, 0, 0, -1, -1 };
+move error_move = { { 0 }, { 0 }, 0, -1, -1 };
 
 /***************/
 /**** board ****/
@@ -685,7 +685,8 @@ moves rook_moves(settings  * set, cord curr, int color, int is_king) {
 		concat(&horizontal_moves, vertical_moves);
 	if (tolower(board_piece(set->board, curr)) == ROOK) {//check if need to castle
 		castle_move = get_castling_move(set, curr, color);
-		if (castle_move.promotion == -1 || !add_node(&horizontal_moves, &castle_move, sizeof(move))) {
+		if (castle_move.is_castle == TRUE)
+			if (!add_node(&horizontal_moves, &castle_move, sizeof(move))) {
 			free_list(&horizontal_moves, &free);
 			return error_moves;
 		}
@@ -730,10 +731,7 @@ move get_castling_move(settings  * set, cord curr, int color) {
 	int relevant_rook_moved = ((rook1_moved && (curr.x == 0)) || (rook2_moved && (curr.x == 7)));
 
 	if (!king_moved && !is_king_checked(color, set->board) && !relevant_rook_moved) {
-		castle.start = curr;
-		castle.is_castle = TRUE;
-		castle.promotion = FALSE;
-		board_copy(set->board, castle.board);
+
 		if (curr.x == 0) { //relevant rook is rook1 (big castle)
 			if (((board_piece(set->board, c1) == EMPTY) &&
 				(board_piece(set->board, c2) == EMPTY) &&
@@ -753,6 +751,10 @@ move get_castling_move(settings  * set, cord curr, int color) {
 			else // relevant rook cannot castle
 				return castle;
 		}
+		castle.start = curr;
+		castle.is_castle = TRUE;
+		castle.promotion = FALSE;
+		board_copy(set->board, castle.board);
 		move_from_to(castle.board, castle.start, castle.end);
 		move_from_to(castle.board, king_loc, king_dest);
 	}
