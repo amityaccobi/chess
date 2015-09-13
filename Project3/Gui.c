@@ -123,6 +123,18 @@ int main_gui(){
 int create_main_window(settings *default_settings){
 	gui_tree_node *panel, *new_game_button, *load_game_button, *quit_button, *last_window,
 		*label;
+	default_settings->black_king_moved = 0;
+	default_settings->black_rook_1_moved = 0;
+	default_settings->black_rook_2_moved = 0;
+	default_settings->color = WHITE;
+	default_settings->is_next_checked = 0;
+	default_settings->minimax_depth = 1;
+	default_settings->mode = 1;
+	default_settings->white_king_moved = 0;
+	default_settings->white_rook_1_moved = 0;
+	default_settings->white_rook_2_moved = 0;
+	
+
 	last_window = window;
 	// create the UI tree (all the controls) in the window
 	window = create_window(800, 600);
@@ -894,24 +906,43 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 	panel = window->children.last->data;
 	//create the massage label
 	if (!create_image(popup_x_location, popup_y_location, 0, 0, 400, 200, popup_img, panel)){
-		free(last_window);
+		free_tree(last_window);
 		return FALSE;
 	}
 	label = window->children.last->data;
 
 	if (!draw_tree(window)){
-		free(last_window);
+		free_tree(last_window);
 		return FALSE;
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
-		free(last_window);
+		free_tree(last_window);
 		return FALSE;
 	}
 
-	// set a delay of 3 sec
-	SDL_Delay(3000);
+	// set a delay of 0.75 sec
+	SDL_Delay(750);
 
+
+	gui_tree_node *curr_control = NULL;
+	node * curr_node = window->children.first;
+	while (curr_node->next->next != NULL){
+		curr_node = curr_node->next;
+	}
+	window->children.last = curr_node;
+	free_tree(curr_node->next->data);
+	curr_node->next = NULL;
+	window->children.len--;
+
+	// re-draw tree
+	if (!draw_tree(window)){
+		return FALSE;
+	}
+	if (SDL_Flip(window->surface) != 0) {
+		free_tree(last_window);
+		return FALSE;
+	}
 	//free_tree(last_window);
 	return TRUE;
 }
@@ -1454,17 +1485,19 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	moves comp_moves = { 0 };
 
 	check_castling_conditions(game_settings);
-	int was_checked = FALSE;
+	int was_checked = is_king_checked(other_player(game_settings->next),game_settings->board);
 
 
 	// comp turn
-	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next)){
+	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next) && (!game_over)){
 		player_move = computer_turn(game_settings);
-		if (player_move.promotion != NO_MOVE_CODE) {
+		if (player_move.promotion == NO_MOVE_CODE) {
 			if (was_checked){
 				if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
+					game_over = TRUE;
 					return FALSE;
 				}
+
 			}
 			else{
 				if (!create_popup(&game_settings, 0, TIE_MASSAGE)){
@@ -1516,9 +1549,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++FREEEEEEE STUUUUUUUUUUUUUUFFFFFFFFFFFFFFFFF+++++++++++++++*/
 	}
 	//check for mate/tie/check
-	if (all_possible_moves.len == 0){
+	if ((all_possible_moves.len == 0) && (!game_over)){
 		if (game_settings->is_next_checked){
 			if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
+				game_over = TRUE;
 				return FALSE;
 			}
 		}
@@ -1704,6 +1738,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			
 				//click on side control
 				else if (is_inside_gui_tree_node(main_menu_button, event.button.x, event.button.y)){
+					game_over = FALSE;
 					/*if (moves_of_piece->len>0){
 						free_list(moves_of_piece, free);
 					}
