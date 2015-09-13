@@ -930,6 +930,23 @@ int get_best_depth(settings * set, int player) {
 		return 2;
 }
 
+int can_piece_move(settings * set, cord piece) {
+	moves possible_moves;
+	int num_of_moves;
+
+	possible_moves = get_simple_moves(set, piece);
+	num_of_moves = possible_moves.len;
+	free_list(&possible_moves, &free);
+	if (num_of_moves == -1) //there was an error, return an error score
+		return -1;
+	// once one of the current_player can move, they do not lose,
+	// no need to preform this check again.
+	else if (num_of_moves == 0)
+		return FALSE;
+	else
+		return TRUE;
+}
+
 /* calculates the board's score.
 * scoring_player = color of the minimax-maximizer player
 * current_player = color of the player whose turn it is now.
@@ -943,11 +960,11 @@ int get_best_depth(settings * set, int player) {
 int score(settings * set, int scoring_player, int current_player, int is_best){
 	int total_score;
 	cord piece;
-	moves possible_moves;
-	int no_more_moves = TRUE;
+	int no_player_moves = TRUE;
+	int no_other_moves = TRUE;
 	int no_scoring_king = TRUE;
 	int no_other_king = TRUE;
-	int num_of_moves;
+	int can_move;
 	int player_score = 0;
 	int other_player_score = 0;
 	int is_scoring_piece;
@@ -976,28 +993,33 @@ int score(settings * set, int scoring_player, int current_player, int is_best){
 				other_player_score += piece_score;
 
 			// we have to check that current_player has at least one piece that
-			// can move, otherwise current_player loses or it's a tie.
-			if (no_more_moves && (piece_color == current_player)) {
-				// check walking move for piece. checking move of distance 1 takes only O(1) time if
-				// player cannot move and O(n) if player can move (creating new board. occurs at most once)
-				// is enough for both king & man  (if king cannot move 1 he cannot move 2) 
-				possible_moves = get_simple_moves(set, piece);
-				num_of_moves = possible_moves.len;
-				free_list(&possible_moves, &free);
-				if (num_of_moves == -1) //there was an error, return an error score
+			// can move, otherwise current_player loses or it's a tie. also, 
+			// we have to check that other player can move (for the same reason)
+			if (no_player_moves && (piece_color == current_player) ||
+				(no_other_moves && (piece_color == other_player(current_player)))) {
+				can_move = can_piece_move(set, piece);
+				if (can_move == -1)
 					return SCORE_ERROR;
-				// once one of the current_player can move, they do not lose,
-				// no need to preform this check again.
-				if (num_of_moves > 0) {
-					no_more_moves = FALSE;
+				else if (can_move) {
+					if (piece_color == current_player)
+						no_player_moves = FALSE;
+					else
+						no_other_moves = FALSE;
 				}
 			}
 		}
 	}
 	// current_player cannot play.
-	if (no_more_moves) {
+	if (no_player_moves) {
 		if (is_scoring_checked) // checkmate
 			total_score = (scoring_player == current_player) ? LOSE_SCORE : WIN_SCORE;
+		else // tie
+			total_score = is_best ? 0 : TIE_SCORE; // in best difficulty: 0, otherwise: better only than LOSE_SCORE
+	}
+	// check if other player can move
+	else if (no_other_moves){
+		if (is_other_checked)
+			total_score = (scoring_player == current_player) ? WIN_SCORE : LOSE_SCORE;
 		else // tie
 			total_score = is_best ? 0 : TIE_SCORE; // in best difficulty: 0, otherwise: better only than LOSE_SCORE
 	}
