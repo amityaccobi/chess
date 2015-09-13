@@ -482,7 +482,7 @@ int listener_to_Settings_window(settings *default_settings, gui_tree_node *color
 // create the "set board" window
 int create_set_board_window(settings *game_settings, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE]){
 	gui_tree_node *side_panel, *game_panel, *board_panel, *add_button, *move_button, *start_button, *remove_button, *cancel_button,
-		/**tools_to_add,*/ * mask, *vertical_frame1, *vertical_frame2, *horizontal_frame1, *horizontal_frame2, *last_window;
+		*vertical_frame1, *vertical_frame2, *horizontal_frame1, *horizontal_frame2, *last_window;
 	last_window = window;
 	// create the UI tree (all the controls) in the window
 	window = create_window(866, 666);
@@ -597,7 +597,8 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 		gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], int is_marked, cord marked_cord, int is_move){
 	
 	int frame_offset = 33;
-	int i, j, piece_color, next_window;
+	int i, j, next_window;
+	// int piece_color;
 	SDL_Event event;
 	settings tmp_settings = { 0 };
 	memcpy(&tmp_settings, game_settings, sizeof(settings));
@@ -638,7 +639,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					if (is_move){
 						//if the target square in the board is not empty -> pop warning
 						if (board_piece(game_settings->board, piece_cord) != EMPTY){
-							if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+							if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -646,7 +647,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						char tool_to_move = tmp_settings.board[marked_cord.x][marked_cord.y];
 						//check if no movement of pawn to rows 1 or 7
 						if (((tool_to_move == 'm') || (tool_to_move == 'M')) && ((piece_cord.y == 0) || (piece_cord.y == 7))){
-							if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+							if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -656,7 +657,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						
 						//check if this remove is valid
 						if (!is_valid_for_set_board_window(tmp_settings.board)){
-							if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+							if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -699,7 +700,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				board_piece(tmp_settings.board, marked_cord) = EMPTY;
 				//check if this remove is valid
 				if (!is_valid_for_set_board_window(tmp_settings.board)){
-					if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+					if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 						return FALSE;
 					}
 				}
@@ -727,7 +728,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 
 				//if the target square in the board is not empty -> not valid
 				if (board_piece(game_settings->board, marked_cord) != EMPTY){
-					if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+					if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 						return FALSE;
 					}
 					return SET_BOARD_WINDOW;
@@ -792,7 +793,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					board_piece(tmp_settings.board, marked_cord) = tool_type_to_add;
 					//check if this add is valid
 					if (!is_valid_for_set_board_window(tmp_settings.board)){
-						if (!create_popup(&game_settings, 0, INVALID_SET_MASSAGE)){
+						if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
@@ -1234,7 +1235,7 @@ int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_setti
 int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE]){
 	
 	gui_tree_node *side_panel, *game_panel, *board_panel, *save_button, *main_menu_button, 
-		*get_best_move_button, *mask, *quit_button,*vertical_frame1, *vertical_frame2, *horizontal_frame1,
+		*get_best_move_button,/* *mask,*/ *quit_button,*vertical_frame1, *vertical_frame2, *horizontal_frame1,
 		*horizontal_frame2, *last_window;
 	
 	last_window = window;
@@ -1322,8 +1323,8 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	//free_tree(last_window);
 	 //game_flow(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, empty_moves);
 		//before_listener(game_settings, game_panel, side_panel, save_button, main_menu_button, quit_button, board_tools, &empty_moves, FALSE, &empty_moves);
-	int next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button,
-									quit_button, board_tools, get_best_move_button, &empty_moves, FALSE, &empty_moves);
+	int next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button,	
+		quit_button, board_tools, get_best_move_button, &empty_moves, FALSE, &empty_moves);
 	free_tree(last_window);
 	return next_window;
 }
@@ -1493,14 +1494,14 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		player_move = computer_turn(game_settings);
 		if (player_move.promotion == NO_MOVE_CODE) {
 			if (was_checked){
-				if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
+				if (!create_popup(game_settings, 0, MATE_MESSAGE)){
 					game_over = TRUE;
 					return FALSE;
 				}
 
 			}
 			else{
-				if (!create_popup(&game_settings, 0, TIE_MASSAGE)){
+				if (!create_popup(game_settings, 0, TIE_MASSAGE)){
 					return FALSE;
 				}
 			}
@@ -1509,7 +1510,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			return GAME_WINDOW;
 		}
 		else if (was_checked){
-			if (!create_popup(&game_settings, 0, CHECK_MASSAGE)){
+			if (!create_popup(game_settings, 0, CHECK_MASSAGE)){
 				return FALSE;
 			}
 		}
@@ -1551,13 +1552,13 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	//check for mate/tie/check
 	if ((all_possible_moves.len == 0) && (!game_over)){
 		if (game_settings->is_next_checked){
-			if (!create_popup(&game_settings, 0, MATE_MESSAGE)){
+			if (!create_popup(game_settings, 0, MATE_MESSAGE)){
 				game_over = TRUE;
 				return FALSE;
 			}
 		}
 		else{
-			if (!create_popup(&game_settings, 0, TIE_MASSAGE)){
+			if (!create_popup(game_settings, 0, TIE_MASSAGE)){
 				return FALSE;
 			}
 			game_over = TRUE;
@@ -1566,7 +1567,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		}
 	}
 	else if (game_settings->is_next_checked){
-		if (!create_popup(&game_settings, 0, CHECK_MASSAGE)){
+		if (!create_popup(game_settings, 0, CHECK_MASSAGE)){
 			return FALSE;
 		}
 	}
@@ -1640,7 +1641,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						//promotion:
 						if (curr_move->promotion == 1){
 							int tool_color_shift = (piece_color == BLACK) ? 0 : 370;
-							int clicked_button = create_dialog(&game_settings, dialog_window, 4, 75, 50, 0, 3024 + tool_color_shift, FALSE);
+							int clicked_button = create_dialog(game_settings, dialog_window, 4, 75, 50, 0, 3024 + tool_color_shift, FALSE);
 							// error occured
 							if (clicked_button == -1){
 								free_tree(dialog_window);
