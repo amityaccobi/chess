@@ -12,8 +12,8 @@
 #include <limits.h>
 #include <time.h> //for srand()
 
-#define DEBUG FALSE
-#define DEBUG1 TRUE
+#define DEBUG TRUE
+#define DEBUG1 FALSE
 
 /*****************/
 /****CONTSANTS****/
