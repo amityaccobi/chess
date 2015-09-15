@@ -115,6 +115,7 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 	img_rect.h = height;
 	SDL_SetClipRect(img.surface, &img_rect);
 	return add_child(&img, parent);
+
 }
 
 //creating a button and connecting it to its parent in the UI tree, return if succeeded

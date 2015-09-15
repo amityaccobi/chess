@@ -67,7 +67,8 @@ int piece_type(char c);
 
 
 move* get_relevent_marked_move(cord piece_cord, moves *moves_for_piece);
-int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_panel, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], cord piece_cord, moves moves_for_piece, int blue_mark);
+int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_panel,
+	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], cord piece_cord, moves moves_for_piece, int blue_mark);
 moves set_comp_moves(move player_move);
 move* get_selected_move(moves moves_of_piece, cord piece_cord);
 void reset_game(settings *game_settings);
@@ -85,5 +86,6 @@ int create_dialog(settings *default_settings, int num_of_controls, int control_w
 int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int is_save_load_dialog);
 int create_popup(settings *default_settings, int popup_x_location, int popup_y_location);
+int mark_castle(gui_tree_node *board_panel, move *curr_move);
 
 #endif
