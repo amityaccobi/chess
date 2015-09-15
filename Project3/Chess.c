@@ -845,6 +845,14 @@ moves best_next_moves(settings set, int maximizer) {
 		memcpy(&next_set, &set, sizeof(settings));
 		next_set.next = other_player(set.next);
 		board_copy(((move*)curr->data)->board, next_set.board);
+
+
+		if (DEBUG){
+		printf("\t\t");
+		print_move((move*)curr->data);
+		}
+
+
 		check_castling_conditions(&next_set);
 		int curr_score = minimax(next_set, curr_alpha, INT_MAX, FALSE, depth - 1, is_best_difficulty);
 		if (curr_score == SCORE_ERROR) {
@@ -879,12 +887,6 @@ moves best_next_moves(settings set, int maximizer) {
 * and the score() function. returns ERROR_SCORE in case of an error.
 */
 int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, int is_best_difficulty){
-	if (DEBUG){
-		printf("WK: %d WR1: %d WR2: %d ||||||| BK: %d BR1: %d BR2: %d\n",
-			set.white_king_moved, set.white_rook_1_moved, set.white_rook_2_moved,
-			set.black_king_moved, set.black_rook_1_moved, set.black_rook_2_moved);
-		print_board(set.board);
-	}
 	int player = set.next;
 	if (depth == 0) {
 		int scorrer = is_maxi_player ? player : other_player(player);
@@ -907,8 +909,15 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 		move * cur_move = curr->data;
 		settings next_set;
 		memcpy(&next_set, &set, sizeof(settings));
+		board_copy(cur_move->board, next_set.board);
 		next_set.next = other_player(player);
 		check_castling_conditions(&next_set);
+		if (DEBUG){
+			printf("WK: %d WR1: %d WR2: %d ||||||| BK: %d BR1: %d BR2: %d\n",
+				next_set.white_king_moved, next_set.white_rook_1_moved, next_set.white_rook_2_moved,
+				next_set.black_king_moved, next_set.black_rook_1_moved, next_set.black_rook_2_moved);
+			print_board(cur_move->board);
+		}
 		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
@@ -931,9 +940,9 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 int get_best_depth(settings * set, int player) {
 	int board_score = score(set, player, player, TRUE);
 	if (board_score == 0)
-		return 3;
-	else if (board_score > 0)
 		return 4;
+	else if (board_score > 0)
+		return 3;
 	else
 		return 2;
 }
@@ -1039,12 +1048,8 @@ int score(settings * set, int scoring_player, int current_player, int is_best){
 		total_score = WIN_SCORE;
 
 	//RELEVANT ONLY FOR best DIFFICULTY!
-	else if (is_best && is_scoring_checked) {
-		if (is_scoring_checked)
-			return LOSE_SCORE + 42;
-		else if (is_other_checked)
-			return WIN_SCORE - 42;
-	}
+	else if (is_best && is_scoring_checked)
+		return LOSE_SCORE + 42;
 
 	// both players' kings are alive and pining for the fjords
 	else
