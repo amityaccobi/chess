@@ -189,4 +189,4 @@ void check_castling_conditions(settings * game_settings);
 int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]);
 move get_best_move(settings * game_settings);
 
-#endif CHESS
+#endif

@@ -65,4 +65,4 @@ move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]);
 char piece_from_string(char * piece_char, int color);
 move user_turn(settings * game_settings, int was_checked);
 
-#endif CONSOLE_
+#endif
