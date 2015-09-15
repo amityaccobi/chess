@@ -12,7 +12,7 @@
 #include <limits.h>
 #include <time.h> //for srand()
 
-#define DEBUG TRUE
+#define DEBUG FALSE
 #define DEBUG1 FALSE
 
 /*****************/
