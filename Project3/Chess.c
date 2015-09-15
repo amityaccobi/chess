@@ -908,7 +908,7 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 		settings next_set;
 		memcpy(&next_set, &set, sizeof(settings));
 		next_set.next = other_player(player);
-		check_castling_conditions(&next_set)
+		check_castling_conditions(&next_set);
 		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
