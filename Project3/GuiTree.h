@@ -20,4 +20,4 @@ void free_tree(gui_tree_node* parent);
 void free_tree_without_root(gui_tree_node* root);
 
 
-#endif TREE_
+#endif

@@ -86,4 +86,4 @@ int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_setting
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int is_save_load_dialog);
 int create_popup(settings *default_settings, int popup_x_location, int popup_y_location);
 
-#endif GUI
+#endif
