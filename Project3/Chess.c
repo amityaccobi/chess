@@ -3,7 +3,7 @@
 
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
-move error_move = { 0, 0, 0, 0, 0, -1, -1 };
+move error_move = { { 0 }, { 0 }, 0, -1, -1 };
 
 /***************/
 /**** board ****/
@@ -45,7 +45,7 @@ void clear(char board[BOARD_SIZE][BOARD_SIZE]) {
 // check 3 things: 1. only one king, 2. no more than allowed pieces
 // for every piece, 3.no pawns in row 0 and 7
 int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]){
-	char piece[12] = { 'm', 'b', 'n', 'r', 'q', 'k', 'M', 'B', 'N', 'R', 'Q', 'K' };
+	char piece[12] = { 'm', 'b', 'n','r','q','k','M','B','N','R','Q','K' };
 	int i, j;
 	int first_row = 0;
 	int last_row = 7;
@@ -64,7 +64,7 @@ int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]){
 			return FALSE;
 	}
 	return TRUE;
-
+	
 }
 //check if board is valid for starting the game
 int is_valid_board(char board[BOARD_SIZE][BOARD_SIZE]) {
@@ -184,7 +184,7 @@ moves get_moves_for_piece(moves all_possible_moves, cord c) {
 	while (curr_node != NULL){
 		curr_move = curr_node->data;
 		king_y = (which_color(board_piece(curr_move->board, curr_move->end)) == WHITE) ? 0 : 7;
-		if (is_same_cord((curr_move->start), c) || (curr_move->is_castle && ((c.x == 4) && (c.y == king_y)))) {
+		if (is_same_cord((curr_move->start), c) || (curr_move->is_castle && ((c.x == 4)&& (c.y ==king_y)))) {
 			if (!add_node(&moves_for_piece, curr_move, sizeof(move))){
 				free_list(&moves_for_piece, free);
 				return error_moves;
@@ -1078,7 +1078,7 @@ move get_best_move(settings * game_settings) {
 		for (int i = 0; i < r; i++) {
 			random_best_move = random_best_move->next;
 		};
-		best_move = *(move*)random_best_move->data;
+		best_move = *(move*) random_best_move->data;
 		//board_copy(best_move->board, game_settings->board);
 		free_list(&best_moves, &free);
 		//game_settings->is_next_checked = (is_king_checked(other_player(game_settings->next), game_settings->board));
