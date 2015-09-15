@@ -37,10 +37,9 @@ int main_gui();
 int create_main_window(settings *default_settings);
 int create_load_save_window(settings *default_settings, int is_save);
 int create_settings_window(settings *default_settings);
-int listener_to_Settings_window(settings *default_settings, gui_tree_node *color_white_button,
-	gui_tree_node *color_black_button, gui_tree_node *next_playe_black_button,
-	gui_tree_node *next_playe_white_button, gui_tree_node *ok_button, gui_tree_node *cancel_button,
-	gui_tree_node *set_board_button, gui_tree_node *game_difficulty[5]);
+int listener_to_Settings_window(settings *default_settings, gui_tree_node *color_button, gui_tree_node *diff_change_button,
+	gui_tree_node *next_playe_button, gui_tree_node *ok_button, gui_tree_node *cancel_button, gui_tree_node *next_player_change_button,
+	gui_tree_node *color_change_button, gui_tree_node *set_board_button, gui_tree_node *game_difficulty);
 int create_player_selection_window(settings *default_settings);
 int listener_to_player_selection_window(settings *default_settings, gui_tree_node *player_vs_player_button,
 	gui_tree_node *player_vs_comp_button, gui_tree_node *cancel_button);
@@ -76,12 +75,12 @@ int before_listener(settings *game_settings, gui_tree_node *game_panel, gui_tree
 	gui_tree_node *main_menu_button, gui_tree_node *quit_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
 	moves *all_piece_possible_moves, int to_move, moves *moves_of_piece);
 int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_panel,
-	gui_tree_node *side_panel, gui_tree_node *add_button,
-	gui_tree_node *move_button, gui_tree_node *start_button, gui_tree_node *remove_button,
-	gui_tree_node *cancel_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], int is_marked, cord marked_cord, int is_move);
+	gui_tree_node *side_panel, gui_tree_node *add_button, gui_tree_node *next_player_change_color, gui_tree_node *move_button,
+	gui_tree_node *start_button, gui_tree_node *remove_button, gui_tree_node *cancel_button,
+	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], int is_marked, cord marked_cord, int is_move);
 int create_set_board_window(settings *game_settings, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE]);
 int mark_selected_cord(settings *game_settings, gui_tree_node *game_panel, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], cord piece_cord, int move_mark);
-int create_dialog(settings *default_settings, gui_tree_node *dialog_window, int num_of_controls, int control_width, int control_hight, int label_location_x, int label_location_y,
+int create_dialog(settings *default_settings, int num_of_controls, int control_width, int control_hight, int label_location_x, int label_location_y,
 	int is_save_load_dialog);
 int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int is_save_load_dialog);

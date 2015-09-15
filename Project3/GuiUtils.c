@@ -130,7 +130,9 @@ int draw_tree(gui_tree_node * tree_root) {
 	current_node = tree_root->children.first;
 	while ((current_node != NULL) && (tree_root->children.len != 0)){
 		current_child = current_node->data;
-		draw_tree(current_child);
+		if (!draw_tree(current_child)){
+			return FALSE;
+		}
 		current_node = current_node->next;
 	}
 	if (tree_root->parent != NULL) { //draw everything but tree's root
@@ -144,7 +146,6 @@ int draw_gui_tree_node(gui_tree_node* gui_tree_node) {
 	if (SDL_BlitSurface(gui_tree_node->surface, &(gui_tree_node->surface->clip_rect),
 						gui_tree_node->parent->surface, gui_tree_node->offset_rect) != 0) {
 		SDL_FreeSurface(gui_tree_node->surface);
-		//printf("ERROR: failed to blit image: %s\n", SDL_GetError());
 		return FALSE;
 	}
 	return TRUE;
@@ -155,14 +156,14 @@ int is_inside_gui_tree_node(gui_tree_node *gui_tree_node, int x, int y) {
 	if (gui_tree_node != NULL) {
 		//if conrtol not error gui_tree_node
 		if (gui_tree_node->offset_rect == NULL) {
-			return 1;
+			return TRUE;
 		}
 		if ((x >= gui_tree_node->offset_x) &&
 			(x <= gui_tree_node->offset_x + gui_tree_node->surface->clip_rect.w) &&
 			(y >= gui_tree_node->offset_y) &&
 			(y <= gui_tree_node->offset_y + gui_tree_node->surface->clip_rect.h)) {
-			return 1;
+			return TRUE;
 		}
 	}
-	return 0;
+	return FALSE;
 }
