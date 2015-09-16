@@ -19,6 +19,7 @@
 #define GAME_WINDOW 6
 #define SET_BOARD_WINDOW 7
 #define QUIT_WINDOW 8
+#define QUIT_PROGRAM -1
 
 #define CHECK_MASSAGE 0
 #define MATE_MESSAGE 200
@@ -51,9 +52,9 @@ int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_setti
 int create_load_window(settings *default_settings);
 int draw_board(settings *game_settings, gui_tree_node *panel,
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], moves possible_moves, int is_comp, cord single_cord);
-int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel, gui_tree_node *save_button,
+int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel, gui_tree_node *turn_protocol_panel, gui_tree_node *save_button,
 	gui_tree_node *main_menu_button, gui_tree_node *quit_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
-	gui_tree_node *get_best_move_button, moves *all_piece_possible_moves, int to_move, moves *moves_of_piece);
+	gui_tree_node *get_best_move_button, moves *all_piece_possible_moves, int to_move, moves *moves_of_piece, cord marked_cord);
 
 int mark_all_possible_moves(moves possible_moves, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
 	settings *game_settings, gui_tree_node *panel);
@@ -86,6 +87,6 @@ int create_dialog(settings *default_settings, int num_of_controls, int control_w
 int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int is_save_load_dialog);
 int create_popup(settings *default_settings, int popup_x_location, int popup_y_location);
-int mark_castle(gui_tree_node *board_panel, move *curr_move);
+int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling);
 
 #endif
