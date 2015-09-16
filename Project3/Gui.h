@@ -19,7 +19,7 @@
 #define GAME_WINDOW 6
 #define SET_BOARD_WINDOW 7
 #define QUIT_WINDOW 8
-#define QUIT_PROGRAM -1
+#define QUIT_PROGRAM 0
 
 #define CHECK_MASSAGE 0
 #define MATE_MESSAGE 200
@@ -88,5 +88,6 @@ int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_setting
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int is_save_load_dialog);
 int create_popup(settings *default_settings, int popup_x_location, int popup_y_location);
 int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling);
+int create_quit_dialog(settings *game_settings, int prev_window);
 
 #endif
