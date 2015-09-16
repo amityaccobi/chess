@@ -10,10 +10,10 @@ int main(int argc, char * argv[]) {
 	if (c[0] == 'c')
 		return console_mode();
 	else 
-		return main_gui();
+		return gui_mode();
 	}
 	if (argc > 1 && (strcmp(argv[1], "gui") == 0))
-		return main_gui();
+		return gui_mode();
 	else
 		return console_mode();
 	return 0;
