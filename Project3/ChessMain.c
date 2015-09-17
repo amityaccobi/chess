@@ -12,9 +12,10 @@ int main(int argc, char * argv[]) {
 	else 
 		return main_gui();
 	}
-	if (argc > 1 && (strcmp(argv[1], "gui") == 0))
+	
+	if (argc == 2 && (strcmp(argv[1], "gui") == 0))
 		return main_gui();
-	else
+	else if (argc == 1 || strcmp(argv[1], "console") == 0)
 		return console_mode();
 	return 0;
 }
