@@ -5,8 +5,13 @@ moves empty_moves = { 0 };
 extern moves error_moves;
 extern move error_move;
 extern cord error_cord;
+<<<<<<< HEAD
 move empty_move = { 0, 0 };
 move player_move = { -1, -1 };
+=======
+move empty_move = { 0, 0 }; //???
+move player_move = { -1, -1 }; //???
+>>>>>>> parent of 362def4... MASSAGE
 int game_over = FALSE;
 int is_castling_now = FALSE;
 int checking_player = -1;
@@ -23,7 +28,11 @@ SDL_Surface* dialog_frame = NULL;
 int main_gui(){
 	//reset_game(game_settings)
 	settings game_settings = { 0 };
+<<<<<<< HEAD
 	int cur_window, last_window;
+=======
+	int cur_window, last_window; //???
+>>>>>>> parent of 362def4... MASSAGE
 	init_board(game_settings.board);
 	game_settings.color = WHITE;
 	game_settings.minimax_depth = 1;
