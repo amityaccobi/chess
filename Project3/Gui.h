@@ -21,10 +21,10 @@
 #define QUIT_WINDOW 8
 #define QUIT_PROGRAM 0
 
-#define CHECK_MESSAGE 0
+#define CHECK_MASSAGE 0
 #define MATE_MESSAGE 200
-#define INVALID_SET_MESSAGE 400
-#define TIE_MESSAGE 600
+#define INVALID_SET_MASSAGE 400
+#define TIE_MASSAGE 600
 
 #define GUI_SAVE 3
 #define GUI_LOAD 2
@@ -33,7 +33,7 @@
 /***********************/
 /**** LIST OF FUNCS ****/
 /***********************/
-int gui_mode();
+int main_gui();
 //int create_main_window();
 int create_main_window(settings *default_settings);
 int create_load_save_window(settings *default_settings, int is_save);

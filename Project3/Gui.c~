@@ -5,6 +5,8 @@ moves empty_moves = { 0 };
 extern moves error_moves;
 extern move error_move;
 extern cord error_cord;
+move empty_move = { 0, 0 }; //???
+move player_move = { -1, -1 }; //???
 int game_over = FALSE;
 int is_castling_now = FALSE;
 int checking_player = -1;
@@ -18,10 +20,10 @@ SDL_Surface* tools_img = NULL;
 SDL_Surface* dialog_frame = NULL;
 
 
-int gui_mode(){
+int main_gui(){
 	//reset_game(game_settings)
 	settings game_settings = { 0 };
-	int cur_window;
+	int cur_window, last_window; //???
 	init_board(game_settings.board);
 	game_settings.color = WHITE;
 	game_settings.minimax_depth = 1;
@@ -49,6 +51,7 @@ int gui_mode(){
 		exit(0);
 	}
 	cur_window = MAIN_WINDOW;
+	last_window = MAIN_WINDOW;
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE];
 
 
@@ -59,16 +62,20 @@ int gui_mode(){
 	while (cur_window != QUIT_PROGRAM){
 		switch (cur_window){
 		case (MAIN_WINDOW) :
+			last_window = cur_window;
 			reset_game(&game_settings);
 			cur_window = create_main_window(&game_settings);
 			break;
 		case (SETTINGS_WINDOW) :
+			last_window = cur_window;
 			cur_window = create_settings_window(&game_settings);
 			break;
 		case (GAME_WINDOW) :
+			last_window = cur_window;
 			cur_window = create_game_window(&game_settings, board_tools);
 			break;
 		case (SET_BOARD_WINDOW) :
+			last_window = cur_window;
 			cur_window = create_set_board_window(&game_settings, board_tools);
 			break;
 		default:
@@ -719,7 +726,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						char tool_to_move = tmp_settings.board[marked_cord.x][marked_cord.y];
 						//check if no movement of pawn to rows 1 or 7
 						if (((tool_to_move == 'm') || (tool_to_move == 'M')) && ((piece_cord.y == 0) || (piece_cord.y == 7))){
-							if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+							if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -729,7 +736,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						
 						//check if this remove is valid
 						if (!is_valid_for_set_board_window(tmp_settings.board)){
-							if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+							if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -772,7 +779,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				board_piece(tmp_settings.board, marked_cord) = EMPTY;
 				//check if this remove is valid
 				if (!is_valid_for_set_board_window(tmp_settings.board)){
-					if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+					if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 						return FALSE;
 					}
 				}
@@ -847,7 +854,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 							break;
 						}
 					if (((tool_type_to_add == 'm') || (tool_type_to_add == 'M')) && ((marked_cord.y == 0) || (marked_cord.y == 7))){
-						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+						if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
@@ -855,7 +862,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					board_piece(tmp_settings.board, marked_cord) = tool_type_to_add;
 					//check if this add is valid
 					if (!is_valid_for_set_board_window(tmp_settings.board)){
-						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+						if (!create_popup(game_settings, 0, INVALID_SET_MASSAGE)){
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
@@ -885,7 +892,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 
 }
 
-// creating popup message
+// creating popup massage
 int create_popup(settings *default_settings, int popup_x_location, int popup_y_location){
 	
 	gui_tree_node *panel, *last_window;
@@ -896,7 +903,7 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 		return FALSE;
 	}
 	panel = window->children.last->data;
-	//create the message label
+	//create the massage label
 	if (!create_image(popup_x_location, popup_y_location, 0, 0, 400, 200, popup_img, panel)){
 		free_tree(last_window);
 		return FALSE;
@@ -913,6 +920,7 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 	// set a delay of 1 sec
 	SDL_Delay(1000);
 	// remove the popup from the UI tree
+	gui_tree_node *curr_control = NULL;
 	node * curr_node = window->children.first;
 	while (curr_node->next->next != NULL){
 		curr_node = curr_node->next;
@@ -1044,6 +1052,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
 	// free the malloced controls
 	free(dialog_conrtol);
+	gui_tree_node *curr_control = NULL;
 	node * curr_node = window->children.first;
 	while (curr_node->next->next != NULL){
 		curr_node = curr_node->next;
@@ -1330,6 +1339,12 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 	int number_of_castling = how_many_castling(possible_moves);
 	int board_frame = 0;
 	int comp_turn = (is_comp) ? ACTIVE : UNACTIVE;
+	cord casteling_DL_rook = { 0, 0 };
+	cord casteling_D_king = { 4, 0 };
+	cord casteling_DR_rook = { 7, 0 };
+	cord casteling_UL_rook = { 0, 7 };
+	cord casteling_U_king = { 4, 7 };
+	cord casteling_UR_rook = { 7, 7 };
 	move *curr_move = NULL;
 	for (i = 0; i < BOARD_SIZE; i++){
 		for (j = 0; j < BOARD_SIZE; j++){
@@ -1355,7 +1370,7 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 							}
 						}
 						else{
-							if (!mark_castle(panel->parent, &error_move, number_of_castling)){
+							if (!mark_castle(panel->parent, &empty_move, number_of_castling)){
 								return FALSE;
 							}
 							is_active = ACTIVE + comp_turn;
@@ -1493,39 +1508,37 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	int i, j, piece_color, promotion_color, next_window;
 	int frame_offset = 33;
 	moves comp_moves = { 0 };
-	move player_move;
 
 	check_castling_conditions(game_settings);
-	int was_checked = is_king_checked(game_settings->next, game_settings->board);
-	
+	int was_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
+
 
 	// comp turn
 	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next) && (!game_over)){
 		player_move = computer_turn(game_settings);
-		if (!game_over){
-			if (player_move.promotion == NO_MOVE_CODE){
-				if (was_checked){
-					if (!create_popup(game_settings, 0, MATE_MESSAGE)){
-						game_over = TRUE;
-						return FALSE;
-					}
-				}
-				else{
-					if (!create_popup(game_settings, 0, TIE_MESSAGE)){
-						return FALSE;
-					}
-				}
-				game_over = TRUE;
-				check_castling_conditions(game_settings);
-				return GAME_WINDOW;
-			}
-			else if (was_checked){
-				if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
+		if (player_move.promotion == NO_MOVE_CODE) {
+			if (was_checked){
+				if (!create_popup(game_settings, 0, MATE_MESSAGE)){
+					game_over = TRUE;
 					return FALSE;
 				}
 			}
+			else{
+				if (!create_popup(game_settings, 0, TIE_MASSAGE)){
+					return FALSE;
+				}
+			}
+			game_over = TRUE;
+			check_castling_conditions(game_settings);
+			return GAME_WINDOW;
+		}
+		else if (was_checked){
+			if (!create_popup(game_settings, 0, CHECK_MASSAGE)){
+				return FALSE;
+			}
 		}
 		game_settings->next = other_player(game_settings->next);
+		was_checked = game_settings->is_next_checked;
 		//re-render turn protocol
 		int player_color_shift = (game_settings->next == BLACK) ? 0 : 150;
 		if (!create_image(player_color_shift, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel)){
@@ -1556,8 +1569,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++FREEEEEEE STUUUUUUUUUUUUUUFFFFFFFFFFFFFFFFF+++++++++++++++*/
 	}
 	//check for mate/tie/check
-	if ((!game_over)){
-	if ((all_possible_moves.len == 0)){
+	if ((all_possible_moves.len == 0) && (!game_over)){
 		if (game_settings->is_next_checked){
 			if (!create_popup(game_settings, 0, MATE_MESSAGE)){
 				free_list(&all_possible_moves, free);
@@ -1571,7 +1583,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			}
 		}
 		else{
-			if (!create_popup(game_settings, 0, TIE_MESSAGE)){
+			if (!create_popup(game_settings, 0, TIE_MASSAGE)){
 				free_list(&all_possible_moves, free);
 				return FALSE;
 			}
@@ -1584,19 +1596,18 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	else if ((game_settings->is_next_checked)){
 		if (checking_player == -1){
 			checking_player = other_player(game_settings->next);
-			if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
+			if (!create_popup(game_settings, 0, CHECK_MASSAGE)){
 				free_list(&all_possible_moves, free);
 				return FALSE;
 			}
 		}
 		if (checking_player == game_settings->next){
-			if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
+			if (!create_popup(game_settings, 0, CHECK_MASSAGE)){
 				free_list(&all_possible_moves, free);
 				return FALSE;
 			}
 		}
 	}
-}
 	while (SDL_WaitEvent(&event)){
 		switch (event.type){
 		case(SDL_MOUSEBUTTONUP) :
@@ -1702,7 +1713,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						game_settings->is_next_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
 
 						free_tree_without_root(game_panel);
-						if (!mark_castle(game_panel->parent, &error_move, 0))
+						if (!mark_castle(game_panel->parent, &empty_move, 0))
 							return FALSE;
 						if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 							free(curr_move);
@@ -1940,7 +1951,7 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling){
 	int frame_offset = 33;
 	int castling_frame = 0;
-	if (curr_move->is_castle != TRUE)
+	if (curr_move->is_castle == FALSE)
 		return TRUE;
 	if (curr_move->start.y == 0){
 		//right side castle
