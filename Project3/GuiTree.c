@@ -1,5 +1,7 @@
 #include "GuiTree.h"
 
+gui_tree_node defect_node = { -1 };
+
 int add_child(gui_tree_node* child, gui_tree_node* parent){
 	child->offset_x = parent->offset_x + child->offset_rect->x;
 	child->offset_y = parent->offset_y + child->offset_rect->y;

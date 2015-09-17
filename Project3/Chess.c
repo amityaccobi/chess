@@ -3,8 +3,7 @@
 
 moves error_moves = { -1, 0, 0 };
 cord error_cord = { -1, -1 };
-move error_move = { {0},{0}, {{0}}, -1, -1 };
-
+move error_move = { 0, 0, 0, 0, 0, -1, -1 };
 
 /***************/
 /**** board ****/
@@ -1013,7 +1012,7 @@ int score(settings * set, int scoring_player, int current_player, int is_best){
 			// we have to check that current_player has at least one piece that
 			// can move, otherwise current_player loses or it's a tie. also, 
 			// we have to check that other player can move (for the same reason)
-			if ((no_player_moves && (piece_color == current_player)) ||
+			if (no_player_moves && (piece_color == current_player) ||
 				(no_other_moves && (piece_color == other_player(current_player)))) {
 				can_move = can_piece_move(set, piece);
 				if (can_move == -1)

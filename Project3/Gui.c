@@ -5,8 +5,8 @@ moves empty_moves = { 0 };
 extern moves error_moves;
 extern move error_move;
 extern cord error_cord;
-move empty_move = { 0, 0 }; //???
-move player_move = { -1, -1 }; //???
+move empty_move = { 0, 0 };
+move player_move = { -1, -1 };
 int game_over = FALSE;
 int is_castling_now = FALSE;
 int checking_player = -1;
@@ -23,12 +23,18 @@ SDL_Surface* dialog_frame = NULL;
 int main_gui(){
 	//reset_game(game_settings)
 	settings game_settings = { 0 };
-	int cur_window, last_window; //???
+	int cur_window, last_window;
 	init_board(game_settings.board);
 	game_settings.color = WHITE;
 	game_settings.minimax_depth = 1;
 	game_settings.next = WHITE;
 	game_settings.mode = 1;
+	/*
+	buttons_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/buttons3.bmp");
+	popup_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/popup2.bmp");
+	board_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/board.bmp");
+	tools_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/tools2.bmp");
+	*/
 
 	buttons_img = SDL_LoadBMP("sprites/buttons3.bmp");
 	if (buttons_img == NULL){
