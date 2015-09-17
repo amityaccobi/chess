@@ -10,18 +10,14 @@ int main(int argc, char * argv[]) {
 	if (c[0] == 'c')
 		return console_mode();
 	else 
-		return main_gui();
+		return gui_mode();
 	}
-<<<<<<< HEAD
-	
 	if (argc == 2 && (strcmp(argv[1], "gui") == 0))
 		return main_gui();
 	else if (argc == 1 || strcmp(argv[1], "console") == 0)
-=======
 	if (argc > 1 && (strcmp(argv[1], "gui") == 0))
-		return main_gui();
+		return gui_mode();
 	else
->>>>>>> parent of 362def4... MASSAGE
 		return console_mode();
 	return 0;
 }
