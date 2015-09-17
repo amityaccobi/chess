@@ -463,7 +463,7 @@ int listener_to_Settings_window(settings *default_settings, gui_tree_node *diff_
 				}
 				return SETTINGS_WINDOW;
 			}
-								// click on next_player_button
+			// click on next_player_button
 			else if (is_inside_gui_tree_node(next_player_button, eventt.button.x, eventt.button.y)){
 				int clicked_next_change_button = create_dialog(default_settings, 2,
 					100, 50, 0, 3767, GUI_SET);
@@ -821,7 +821,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				}
 				else{
 					//selecting the tool type you wish to add (dialog)
-					int clicked_tool_type_button = create_dialog(game_settings, 6, SQUARE_SIZE,
+					int clicked_tool_type_button = create_dialog(game_settings, 5, SQUARE_SIZE,
 						SQUARE_SIZE, (300 * (clicked_color_button - 1)), 1949, GUI_SET);
 					// error occured
 					if (clicked_tool_type_button == -1){
@@ -834,21 +834,18 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					}
 					switch (clicked_tool_type_button){
 					case(1) :
-						tool_type_to_add = (clicked_color_button == BLACK) ? 'K' : 'k';
-						break;
-					case(2) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'Q' : 'q';
 						break;
-					case(3) :
+					case(2) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'R' : 'r';
 						break;
-					case(4) :
+					case(3) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'B' : 'b';
 						break;
-					case(5) :
+					case(4) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'N' : 'n';
 						break;
-					case(6) :
+					case(5) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'M' : 'm';
 						break;
 					default:
@@ -1269,9 +1266,15 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	}
 	turn_protocol_panel = side_panel->children.last->data;
 	int player_color_shift = (game_settings->next == BLACK) ? 0 : 150;
-	if (!create_image(player_color_shift, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel)){
-		free(last_window);
-		return FALSE;
+	if (game_over){
+		if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+			return FALSE;
+	}
+	else {
+		if (!create_image(player_color_shift, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel)){
+			free(last_window);
+			return FALSE;
+		}
 	}
 
 	//create the frame around the game (4 frames = 2 vertical+2 horizontal)
@@ -1515,6 +1518,14 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				if (was_checked){
 					if (!create_popup(game_settings, 0, MATE_MESSAGE)){
 						game_over = TRUE;
+						if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+							return FALSE;
+						if (!draw_board(game_settings, game_panel, board_tools, comp_moves, TRUE, error_cord))
+							return FALSE;
+						if (!draw_tree(window))
+							return FALSE;
+						if (SDL_Flip(window->surface) != 0)
+							return FALSE;
 						return FALSE;
 					}
 				}
@@ -1525,6 +1536,14 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				}
 				game_over = TRUE;
 				check_castling_conditions(game_settings);
+				if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+					return FALSE;
+				if (!draw_board(game_settings, game_panel, board_tools, comp_moves, TRUE, error_cord))
+					return FALSE;
+				if (!draw_tree(window))
+					return FALSE;
+				if (SDL_Flip(window->surface) != 0)
+					return FALSE;
 				return GAME_WINDOW;
 			}
 			else if (was_checked){
@@ -1570,11 +1589,23 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				if (!create_popup(game_settings, 0, MATE_MESSAGE)){
 					free_list(&all_possible_moves, free);
 					game_over = TRUE;
+					if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+						return FALSE;
+					if (!draw_tree(window))
+						return FALSE;
+					if (SDL_Flip(window->surface) != 0) 
+						return FALSE;
 					return FALSE;
 				}
 				else{
 					free_list(&all_possible_moves, free);
 					game_over = TRUE;
+					if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+						return FALSE;
+					if (!draw_tree(window))
+						return FALSE;
+					if (SDL_Flip(window->surface) != 0)
+						return FALSE;
 					return GAME_WINDOW;
 				}
 			}
@@ -1585,6 +1616,12 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				}
 				free_list(&all_possible_moves, free);
 				game_over = TRUE;
+				if (!create_image(300, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel))
+					return FALSE;
+				if (!draw_tree(window))
+					return FALSE;
+				if (SDL_Flip(window->surface) != 0)
+					return FALSE;
 				check_castling_conditions(game_settings);
 				return GAME_WINDOW;
 			}
