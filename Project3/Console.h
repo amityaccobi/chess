@@ -48,7 +48,6 @@
 #define TIE "The game ends in a tie\n"
 #define CHECK "Check!\n"
 
-#define perror_message(func_name) (fprintf(stderr, "Error: standard function %s has failed\n", func_name))
 #define print_message(message) (printf("%s", message))
 
 #define print_cord(c) (printf("<%c,%d>",(c).x + 'a', (c).y+1))

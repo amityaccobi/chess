@@ -275,7 +275,7 @@ int save_game(char * path, settings * game_settings) {
 	mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next));
 
 	if (game_settings->minimax_depth == BEST_DIFFICULTY)
-		mxmlNewOpaque(mxmlNewElement(game_node, "user_color"), "best");
+		mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), "best");
 	else
 		mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth);
 
@@ -732,8 +732,8 @@ move get_castling_move(settings  * set, cord curr, int color) {
 				return castle;
 		}
 		else if (curr.x == 7){ //relevanot rook is rook2 (small castle)
-			if ((board_piece(set->board, c5) == EMPTY) &&
-				(board_piece(set->board, c6) == EMPTY) && !is_cord_checked(c6, color, set->board)) {
+			if ((board_piece(set->board, c5) == EMPTY) && !is_cord_checked(c5, color, set->board) &&
+				(board_piece(set->board, c6) == EMPTY)) {
 				castle.end = c5;
 				king_dest = c6;
 			}
@@ -815,16 +815,19 @@ moves best_next_moves(settings set, int maximizer) {
 	moves best_moves = { 0 };
 	move * temp_best_move;
 	moves possible_moves = make_all_moves(&set);
-	int best_score = INT_MIN;
-	int curr_alpha = INT_MIN;
+	double best_score = INT_MIN;
+	double curr_alpha = INT_MIN;
+	double curr_score;
+	move_node * curr;
+	int depth, is_best_difficulty;
 	if (possible_moves.len == -1) { //error
 		return possible_moves;
 	}
 
-	int is_best_difficulty = (set.minimax_depth == BEST_DIFFICULTY);
-	int depth = (!is_best_difficulty) ? set.minimax_depth : get_best_depth(&set, maximizer);
+	is_best_difficulty = (set.minimax_depth == BEST_DIFFICULTY);
+	depth = (!is_best_difficulty) ? set.minimax_depth : get_best_depth(&set, maximizer);
 
-	move_node * curr = possible_moves.first;
+	curr = possible_moves.first;
 	while (curr != NULL) {
 		//get the score of each next possible moves, according to minimax algorithm
 		settings next_set;
@@ -840,7 +843,7 @@ moves best_next_moves(settings set, int maximizer) {
 
 
 		check_castling_conditions(&next_set);
-		int curr_score = minimax(next_set, curr_alpha, INT_MAX, FALSE, depth - 1, is_best_difficulty);
+		curr_score = minimax(next_set, curr_alpha, INT_MAX, FALSE, depth - 1, is_best_difficulty, FALSE);
 		if (curr_score == SCORE_ERROR) {
 			free_list(&possible_moves, &free);
 			free_list(&best_moves, &free);
@@ -864,7 +867,7 @@ moves best_next_moves(settings set, int maximizer) {
 	}
 	free_list(&possible_moves, &free);
 	if (DEBUG)
-		printf("CHOSEN SCORE: %d\n", best_score);
+		printf("CHOSEN SCORE: %lf\n", best_score);
 	return best_moves;
 }
 
@@ -872,14 +875,20 @@ moves best_next_moves(settings set, int maximizer) {
 * the function returns score (int) according to the minimax algorithm
 * and the score() function. returns ERROR_SCORE in case of an error.
 */
-int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, int is_best_difficulty){
+double minimax(settings set, double alpha, double beta, int is_maxi_player, int depth, int is_best_difficulty, int can_prune){
 	int player = set.next;
+	double minimax_score;
+	move_node* curr;
+	move * cur_move;
+	settings next_set;
+	double cur_score;
+
 	if (depth == 0) {
 		int scorrer = is_maxi_player ? player : other_player(player);
-		int board_score = score(&set, scorrer, player, is_best_difficulty); //return score according to maximizing player
+		double board_score = score(&set, scorrer, player, is_best_difficulty); //return score according to maximizing player
 		if (DEBUG) {
 			print_board(set.board);
-			printf("CURRSCOR: %d\n", board_score);
+			printf("CURRSCOR: %lf\n", board_score);
 		}
 		return board_score;
 
@@ -894,16 +903,15 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 		else // tie
 			return TIE_SCORE;
 	}
-	int minimax_score = is_maxi_player ? INT_MIN : INT_MAX;
-	move_node* curr = possible_moves.first;
+	minimax_score = is_maxi_player ? INT_MIN : INT_MAX;
+	curr = possible_moves.first;
 	while (curr != NULL){ // continue recursively for each possible move
-		move * cur_move = curr->data;
-		settings next_set;
+		cur_move = curr->data;
 		memcpy(&next_set, &set, sizeof(settings));
 		board_copy(cur_move->board, next_set.board);
 		next_set.next = other_player(player);
 		check_castling_conditions(&next_set);
-		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty);
+		cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty, FALSE);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
 			return SCORE_ERROR;
@@ -914,7 +922,7 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 			alpha = maxi(alpha, minimax_score);
 		else
 			beta = mini(beta, minimax_score);
-		if (beta < alpha) {
+		if ((beta <= alpha) && can_prune ) {
 			break; //pruning
 		}
 		curr = curr->next;
@@ -960,7 +968,7 @@ int can_piece_move(settings * set, cord piece) {
 *				scoring_player's total pieces value minus other player's total pieces value otherwise
 *				ERROR_SCORE in case of an error
 */
-int score(settings * set, int scoring_player, int current_player, int is_best){
+int score(settings * set, int scoring_player, int current_player, int is_best) {
 	int total_score;
 	cord piece;
 	int no_player_moves = TRUE;
@@ -973,6 +981,17 @@ int score(settings * set, int scoring_player, int current_player, int is_best){
 	int is_scoring_piece;
 	int is_scoring_checked = is_king_checked(current_player, set->board);
 	int is_other_checked = is_king_checked(other_player(current_player), set->board);
+	int moves_bonus; //bonus for best difficulty
+
+	moves_bonus = is_best;
+	if (moves_bonus) {
+		moves next_moves = make_all_moves(set);
+		if (next_moves.len == -1)
+			return SCORE_ERROR;
+		moves_bonus = (scoring_player == current_player) ? 1 : -1;
+		moves_bonus *= next_moves.len;
+		free_list(&next_moves,free);
+	}
 
 	for (int i = 0; i < BOARD_SIZE; i++){
 		for (int j = 0; j < BOARD_SIZE; j++){
@@ -1039,7 +1058,7 @@ int score(settings * set, int scoring_player, int current_player, int is_best){
 
 	// both players' kings are alive and pining for the fjords
 	else
-		total_score = player_score - other_player_score;
+		total_score = player_score - other_player_score + moves_bonus;
 	return total_score;
 }
 

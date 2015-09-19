@@ -30,7 +30,7 @@ int create_dialog_window(int width, int height, gui_tree_node* parent){
 	dialog_window.offset_y = 0;
 	dialog_window.offset_rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	if (dialog_window.offset_rect == NULL) {
-		//printf("ERROR: failed to allocate memory.");
+		perror_message("malloc");
 		free(dialog_window.surface);
 		return FALSE;
 	}
@@ -98,8 +98,8 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 	img.children.len = 0;
 	img.offset_rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	if (img.offset_rect == NULL) {
+		perror_message("malloc");
 		return FALSE;
-		//printf("ERROR: failed to allocate memory.");
 	}
 	img.offset_rect->x = xlocation;
 	img.offset_rect->y = ylocation;

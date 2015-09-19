@@ -147,7 +147,6 @@ settings settings_state() {
 	int next = WHITE;
 	int user_color = WHITE;
 	char input[51];
-	moves possible_moves;
 	settings game_settings = { 0 };
 
 	//default settings:
@@ -415,7 +414,7 @@ move user_turn(settings * game_settings, int was_checked) {
 	moves possible_moves = make_all_moves(game_settings);
 	moves moves_for_cord;
 	settings temp_settings;
-	int move_score;
+	double move_score;
 	if (possible_moves.len == -1){ // there was an error
 		exit(0);
 	}
@@ -558,15 +557,15 @@ move user_turn(settings * game_settings, int was_checked) {
 			board_copy(temp_move.board, temp_settings.board);
 			temp_settings.next = other_player(game_settings->next);
 			if (depth != 0) 
-				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE);
+				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE, TRUE);
 			else // depth == 0 if best [since: atoi("best") = 0]
-				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings, game_settings->next) - 1, TRUE);
+				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings, game_settings->next) - 1, TRUE, TRUE);
 
 			if (move_score == SCORE_ERROR){
 				free_list(&possible_moves, free);
 				return error_move;;
 			}
-			printf("%d\n", move_score);
+			printf("%lf\n", move_score);
 		}
 		else if (is_command_with_args(SAVE)) {
 			if (!save_game(args, game_settings)) {
