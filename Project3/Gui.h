@@ -2,6 +2,7 @@
 #define GUI
 
 #include "GuiUtils.h"
+#include <math.h>
 
 /*****************/
 /****CONTSANTS****/

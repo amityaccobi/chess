@@ -1,6 +1,5 @@
 #include "Gui.h"
 
-char *path[NUM_OF_MEMORY_SLOTS] = { "chess1.xml", "chess2.xml", "chess3.xml", "chess4.xml", "chess5.xml", "chess6.xml", "chess7.xml" };
 moves empty_moves = { 0 };
 extern moves error_moves;
 extern move error_move;
@@ -20,19 +19,14 @@ SDL_Surface* dialog_frame = NULL;
 
 int gui_mode(){
 	//reset_game(game_settings)
-	settings game_settings = { 0 };
+	settings game_settings = { 0 }; 
 	int cur_window;
 	init_board(game_settings.board);
 	game_settings.color = WHITE;
 	game_settings.minimax_depth = 1;
 	game_settings.next = WHITE;
 	game_settings.mode = 1;
-	/*
-	buttons_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/buttons3.bmp");
-	popup_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/popup2.bmp");
-	board_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/board.bmp");
-	tools_img = SDL_LoadBMP("C:/Users/ishefi/Documents/GitHub/chess/Project3/sprites/tools2.bmp");
-	*/
+	char slot[50];
 
 	buttons_img = SDL_LoadBMP("sprites/buttons3.bmp");
 	if (buttons_img == NULL){
@@ -165,6 +159,8 @@ int create_main_window(settings *default_settings){
 int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_button,
 	gui_tree_node *load_game_button, gui_tree_node *quit_button) {
 	SDL_Event eventt;
+	char slot[50];
+
 	while (SDL_WaitEvent(&eventt)) {
 		switch (eventt.type) {
 		case (SDL_QUIT) :
@@ -211,7 +207,8 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 					break;
 				}
 				else{
-					if (load_game(path[clicked_button - 1], default_settings)){
+					sprintf(slot, "save%d.xml\0", clicked_button - 1);
+					if (load_game(slot, default_settings)){
 						int clicked_mode_button = create_dialog(default_settings, 2,
 							200, 75, 0, 325, GUI_SET);
 						// error occured
@@ -734,7 +731,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						board_piece(tmp_settings.board, piece_cord) = tool_to_move;
 
 						//check if this remove is valid
-						if (!is_valid_for_set_board_window(tmp_settings.board)){
+						if ((!is_valid_board(tmp_settings.board)) || is_over_max(tmp_settings.board, piece_cord)){
 							if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
 								return FALSE;
 							}
@@ -777,9 +774,8 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 
 			// remove button was clicked
 			else if ((is_inside_gui_tree_node(remove_button, event.button.x, event.button.y)) && is_marked){
-				board_piece(tmp_settings.board, marked_cord) = EMPTY;
 				//check if this remove is valid
-				if (!is_valid_for_set_board_window(tmp_settings.board)){
+				if (tolower(board_piece(game_settings->board, marked_cord))==KING) {
 					if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
 						return FALSE;
 					}
@@ -859,7 +855,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					}
 					board_piece(tmp_settings.board, marked_cord) = tool_type_to_add;
 					//check if this add is valid
-					if (!is_valid_for_set_board_window(tmp_settings.board)){
+					if ((!is_valid_board(tmp_settings.board)) || is_over_max(tmp_settings.board, marked_cord)){
 						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
 							return FALSE;
 						}
@@ -965,6 +961,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	int different_control = TRUE;
 	settings tmp_settings = { 0 };
 	memcpy(&tmp_settings, default_settings, sizeof(settings));
+	char slot[50];
 
 
 	// creating the dialog panel
@@ -1015,7 +1012,8 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		i = j;
 		if (special_dialog>1){
 			//check if button should be active or not
-			special_dialog_active = (load_game(path[i], &tmp_settings)) ? 203 : 0;
+			sprintf(slot, "save%d.xml\0", i);
+			special_dialog_active = (load_game(slot, &tmp_settings)) ? 203 : 0;
 			different_control = FALSE;
 		}
 		// create the controls
@@ -1505,10 +1503,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	int frame_offset = 33;
 	moves comp_moves = { 0 };
 	move player_move;
+	char slot[50];
 
 	check_castling_conditions(game_settings);
 	int was_checked = is_king_checked(game_settings->next, game_settings->board);
-
 
 	// comp turn
 	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next) && (!game_over)){
@@ -1853,7 +1851,8 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					break;
 				}
 				else{ //one of the saving slots was clicked
-					if (save_game(path[clicked_button - 1], game_settings)){
+					sprintf(slot, "save%d.xml\0", clicked_button - 1);
+					if (save_game(slot, game_settings)){
 						return GAME_WINDOW;
 						break;
 					}

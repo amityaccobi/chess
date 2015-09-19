@@ -1,19 +1,13 @@
 #ifndef CHESS_
 #define CHESS_
 
-
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "List.h"
 #include <ctype.h>
 #include <mxml.h>
 #include <limits.h>
 #include <time.h> //for srand()
 
-#define DEBUG FALSE
-#define DEBUG1 FALSE
+#define DEBUG TRUE
 
 /*****************/
 /****CONTSANTS****/
@@ -179,14 +173,14 @@ linked_list knight_moves(settings * set, cord curr, int color);
 void knight_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int color, cord move_cords[32]);
 void move_from_to(char board[BOARD_SIZE][BOARD_SIZE], cord start, cord end);
 int get_piece_score(char player_piece);
-int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece);
-int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece);
+int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], cord c);
+int piece_count(char board[BOARD_SIZE][BOARD_SIZE], cord c);
 int is_king_checked(int colour, char board[BOARD_SIZE][BOARD_SIZE]);
 int get_best_depth(settings * set, int player);
 moves get_moves_for_piece(moves all_possible_moves, cord c);
 move get_castling_move(settings * set, cord curr, int color);
 void check_castling_conditions(settings * game_settings);
-int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]);
 move get_best_move(settings * game_settings);
+cord find_piece(char piece, char board[BOARD_SIZE][BOARD_SIZE]);
 
 #endif

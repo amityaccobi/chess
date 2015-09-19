@@ -41,44 +41,29 @@ void clear(char board[BOARD_SIZE][BOARD_SIZE]) {
 	}
 }
 
-//check if board is valid for "set board window"
-// check 3 things: 1. only one king, 2. no more than allowed pieces
-// for every piece, 3.no pawns in row 0 and 7
-int is_valid_for_set_board_window(char board[BOARD_SIZE][BOARD_SIZE]){
-	char piece[12] = { 'm', 'b', 'n', 'r', 'q', 'k', 'M', 'B', 'N', 'R', 'Q', 'K' };
-	int i, j;
-	int first_row = 0;
-	int last_row = 7;
-	//1. only one king
-	if (!is_valid_board(board))
-		return FALSE;
-	//2. no more than allowed pieces for every piece
-	for (i = 0; i < 12; i++){
-		if (is_over_max(board, piece[i]))
-			return FALSE;
-	}
-	//3.no pawns in row 0 and 7
-	for (j = 0; j < BOARD_SIZE; j++){
-		if ((board[j][first_row] == 'p') || (board[j][first_row] == 'P')
-			|| (board[j][last_row] == 'p') || (board[j][last_row] == 'p'))
-			return FALSE;
-	}
-	return TRUE;
-
-}
 //check if board is valid for starting the game
 int is_valid_board(char board[BOARD_SIZE][BOARD_SIZE]) {
-	return ((piece_count(board, WHITE_K) == 1) &&
-		(piece_count(board, BLACK_K) == 1));
+//	cord white_king_cord = find_piece(WHITE_K, board);
+	//cord black_king_cord = find_piece(BLACK_K, board);
+	return ((piece_count(board, find_piece(WHITE_K, board)) == 1) &&
+		(piece_count(board, find_piece(BLACK_K, board)) == 1));
 }
 
 // piece count
-int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
+int piece_count(char board[BOARD_SIZE][BOARD_SIZE], cord c) {
+	char piece = board_piece(board, c);
+	int is_pawn = (tolower(piece) == PAWN);
+	int is_bishop = (tolower(piece) == BISHOP);
 	int count = 0;
 	for (int i = 0; i < BOARD_SIZE; i++) {
 		for (int j = 0; j < BOARD_SIZE; j++) {
-			if (piece == board[i][j])
+			if (is_bishop && (((i + j) + (c.x + c.y)) % 2 != 0))
+				continue;
+			else if (piece == board[i][j]) {
 				count++;
+				if (is_pawn && ((j % 7) == 0)) //there cannot be pawns on rows 1,8
+					return INT_MAX;
+			}
 		}
 	}
 	return count;
@@ -86,9 +71,9 @@ int piece_count(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
 
 
 //check there are no more than allowed pieces of type 'piece'
-int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
-	char piece_type = tolower(piece);
-	int count = piece_count(board, piece);
+int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], cord c) {
+	char piece_type = tolower(board_piece(board, c));
+	int count = piece_count(board, c);
 	switch (piece_type)
 	{
 	case PAWN:
@@ -97,8 +82,14 @@ int is_over_max(char board[BOARD_SIZE][BOARD_SIZE], char piece) {
 		return (count > 1);
 	case QUEEN:
 		return (count > 1);
-	default: //rest of the pieces
+	case BISHOP: //bishop of each type
+		return (count > 1);
+	case ROOK: 
 		return (count > 2);
+	case KNIGHT:
+		return (count > 2);
+	default: // empty square
+		return FALSE;
 	}
 }
 
@@ -625,11 +616,6 @@ void move_cords(char board[BOARD_SIZE][BOARD_SIZE], cord curr, int max_move, int
 	int dest_color;
 
 	// initialize end_cords
-	if (DEBUG1){
-		if (curr.x < -42) {
-			printf("%s\n", "NO KING!");
-		}
-	}
 	int i;
 	for (i = 0; i < 32; i++){
 		end_cords[i] = error_cord;
@@ -891,7 +877,12 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 	if (depth == 0) {
 		int scorrer = is_maxi_player ? player : other_player(player);
 		int board_score = score(&set, scorrer, player, is_best_difficulty); //return score according to maximizing player
+		if (DEBUG) {
+			print_board(set.board);
+			printf("CURRSCOR: %d\n", board_score);
+		}
 		return board_score;
+
 	}
 	moves possible_moves = make_all_moves(&set); // create all possible moves for player
 	if (possible_moves.len == -1) { //there was an error, return an error score
@@ -912,12 +903,6 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 		board_copy(cur_move->board, next_set.board);
 		next_set.next = other_player(player);
 		check_castling_conditions(&next_set);
-		if (DEBUG){
-			printf("WK: %d WR1: %d WR2: %d ||||||| BK: %d BR1: %d BR2: %d\n",
-				next_set.white_king_moved, next_set.white_rook_1_moved, next_set.white_rook_2_moved,
-				next_set.black_king_moved, next_set.black_rook_1_moved, next_set.black_rook_2_moved);
-			print_board(cur_move->board);
-		}
 		int cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
@@ -929,8 +914,9 @@ int minimax(settings set, int alpha, int beta, int is_maxi_player, int depth, in
 			alpha = maxi(alpha, minimax_score);
 		else
 			beta = mini(beta, minimax_score);
-		if (beta <= alpha)
+		if (beta < alpha) {
 			break; //pruning
+		}
 		curr = curr->next;
 	}
 	free_list(&possible_moves, &free);

@@ -12,25 +12,25 @@ int console_mode()
 		if ((game_settings.mode == PLAYER_VS_PLAYER) || (game_settings.next == game_settings.color)) {
 			next_move = user_turn(&game_settings, was_checked);
 			if (next_move.promotion == -1) {
-				exit(0);
+				return 0;
 			}
 		}
 		//computer turn
 		else {
 			next_move = computer_turn(&game_settings);
 			if (next_move.promotion == -1) {
-				exit(0);
+				return 0;
 			}
 			else if (next_move.promotion != NO_MOVE_CODE) {
 				if (was_checked)
 					print_message(CHECK);
 				if (printf("Computer: move ") < 0) {
 					perror_message("printf");
-					exit(0);
+					return 0;
 				}
 
 				if ((print_move(&next_move) < 0)) {
-					exit(0);
+					return 0;
 				}
 			}
 
@@ -42,11 +42,11 @@ int console_mode()
 				print_win(color_string(other_player((game_settings.next))));
 			else
 				print_message(TIE);
-			exit(0);
+			return 0;
 		}
 		else {
 			if (print_board(next_move.board) < 0)
-				exit(0);
+				return 0;
 		}
 		//switch next player
 		game_settings.next = other_player(game_settings.next);
@@ -198,7 +198,7 @@ settings settings_state() {
 				int color = (strstr(input, "white") != NULL) ? WHITE : BLACK;
 				char piece_to_add = piece_from_string(piece_type, color);
 				board_piece(game_settings.board, new_cord) = piece_to_add;
-				if (is_over_max(game_settings.board, piece_to_add)){
+				if (is_over_max(game_settings.board, new_cord)){
 					print_message(NO_PIECE);
 					// return board to former state
 					board_piece(game_settings.board, new_cord) = tmp_piece;
@@ -258,14 +258,9 @@ settings settings_state() {
 		// parse: start
 		else if is_command(START_SETTING){
 			// start game only if board is valid
-			if (is_valid_board(game_settings.board) &&
-				((possible_moves = make_all_moves(&game_settings)).len != 0)) {
-				if (possible_moves.len > 0) {
-					free_list(&possible_moves, free);
-					break;
-				}
-				else if (possible_moves.len == -1) //error creating possible moves
-					exit(0);
+			if (is_valid_board(game_settings.board)) {
+				game_settings.is_next_checked = is_king_checked(game_settings.next, game_settings.board);
+				break;
 			}
 			else
 				print_message(WRONG_BOARD_INITIALIZATION);
