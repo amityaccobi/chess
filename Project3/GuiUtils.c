@@ -23,7 +23,7 @@ gui_tree_node* create_window(int width, int height){
 
 //return a dialog window (child of the root of the UI tree)
 int create_dialog_window(int width, int height, gui_tree_node* parent){
-	gui_tree_node dialog_window = { 0 };
+	gui_tree_node dialog_window;
 	dialog_window.parent = parent;
 	dialog_window.children.len = 0;
 	dialog_window.offset_x = 0;

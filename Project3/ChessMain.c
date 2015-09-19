@@ -12,9 +12,6 @@ int main(int argc, char * argv[]) {
 	else 
 		return gui_mode();
 	}
-	if (argc == 2 && (strcmp(argv[1], "gui") == 0))
-		return gui_mode();
-	else if (argc == 1 || strcmp(argv[1], "console") == 0)
 	if (argc > 1 && (strcmp(argv[1], "gui") == 0))
 		return gui_mode();
 	else

@@ -206,7 +206,7 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 					return MAIN_WINDOW;
 				}
 				else{
-					sprintf(slot, "save%d.xml\0", clicked_button - 1);
+					sprintf(slot, "save%d.xml", clicked_button - 1);
 					if (load_game(slot, default_settings)){
 						int clicked_mode_button = create_dialog(default_settings, 2,
 							200, 75, 0, 325, GUI_SET);
@@ -1009,7 +1009,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		i = j;
 		if (special_dialog>1){
 			//check if button should be active or not
-			sprintf(slot, "save%d.xml\0", i);
+			sprintf(slot, "save%d.xml", i);
 			special_dialog_active = (load_game(slot, &tmp_settings)) ? 203 : 0;
 			different_control = FALSE;
 		}
@@ -1849,7 +1849,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					break;
 				}
 				else{ //one of the saving slots was clicked
-					sprintf(slot, "save%d.xml\0", clicked_button - 1);
+					sprintf(slot, "save%d.xml", clicked_button - 1);
 					if (save_game(slot, game_settings)){
 						return GAME_WINDOW;
 						break;

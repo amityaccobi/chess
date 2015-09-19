@@ -481,7 +481,7 @@ move user_turn(settings * game_settings, int was_checked) {
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		else if (is_command_with_args(CASTLE)){
 			cord c = parse_cord(args);
-			if (c.x == c.y == -1) {
+			if ((c.x == -1)&& (c.y == -1)) {
 				free_list(&possible_moves, free);
 				return error_move;
 			}
