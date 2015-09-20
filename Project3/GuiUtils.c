@@ -31,7 +31,6 @@ int create_dialog_window(int width, int height, gui_tree_node* parent){
 	dialog_window.offset_rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	if (dialog_window.offset_rect == NULL) {
 		perror_message("malloc");
-		free(dialog_window.surface);
 		return FALSE;
 	}
 	dialog_window.offset_rect->x = 0;
