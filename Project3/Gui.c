@@ -212,6 +212,9 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 							200, 75, 0, 325, GUI_SET);
 						// error occured
 						if (clicked_mode_button == -1){
+							if (!create_popup(default_settings, 0, INVALID_SET_MESSAGE)){
+								return FALSE;
+							}
 							return FALSE;
 						}
 						if (clicked_mode_button == 0){
@@ -229,6 +232,9 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 						}
 						return SETTINGS_WINDOW;
 						break;
+					}
+					else{
+
 					}
 				}
 			}
@@ -890,7 +896,7 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 	last_window = window;
 	//create panel
 	if (!create_panel(125, 250, 400, 200, window)){
-		free(last_window);
+		free_tree(last_window);
 		return FALSE;
 	}
 	panel = window->children.last->data;
@@ -972,7 +978,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	//creating the dialog frame
 	if (!create_image(0, 0, 0, 0, window_width + 2, window_hight + 2, dialog_frame, dialog_panel)){
-		free(last_window);
+		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
@@ -985,21 +991,21 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	panel = dialog_panel->children.last->data;
 	//create the dialog label
 	if (!create_image(label_location_x, label_location_y, 1, 1, label_width, label_hight, buttons_img, panel)){
-		free(last_window);
+		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
 	//create the cancel button
 	if (!create_button(0, 576, (mid_panel - 48),
 		label_hight + (num_of_controls*control_hight), cancel_button_hight, cancel_button_width, buttons_img, panel)){
-		free(last_window);
+		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
 	cancel_button = panel->children.last->data;
 	//create the controls panel (where the controls are located)
 	if (!create_panel(mid_panel - (controls_panel_width / 2), label_hight, controls_panel_width, (num_of_controls*control_hight), panel)){
-		free(last_window);
+		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
@@ -1016,7 +1022,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		// create the controls
 		if (!create_button(label_location_x + special_dialog_active, label_location_y + label_hight + ((i * control_hight)*different_control),
 			special_set_active + (((controls_panel_width) / 2) - (control_width / 2)), (i * control_hight), control_width, control_hight, buttons_img, controls_panel)){
-			free(last_window);
+			//free_tree(last_window);
 			free(dialog_conrtol);
 			return -1;
 		}
@@ -1026,7 +1032,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	// draw the GUI tree
 	if (!draw_tree(window)){
-		free(last_window);
+		//free_tree(last_window);
 		for (int i = 0; i < num_of_controls; i++)
 			free(dialog_conrtol[i]);
 		free(dialog_conrtol);
@@ -1034,7 +1040,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
-		free(last_window);
+		//free_tree(last_window);
 		for (int i = 0; i < num_of_controls; i++)
 			free(dialog_conrtol[i]);
 		free(dialog_conrtol);
@@ -1042,6 +1048,18 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	}
 
 	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
+
+	// chekc that if an 'empty slot' is clicked -> nothing will happend
+	sprintf(slot, "save%d.xml", selected_slot);
+	while ((special_dialog == GUI_LOAD) && (selected_slot >= 1)){
+		if (!load_game(slot, &tmp_settings)){
+			selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
+			//if (selected_slot < 1)
+			//break;
+			sprintf(slot, "save%d.xml", selected_slot);
+		}
+	}
+
 	// free the malloced controls
 	free(dialog_conrtol);
 	node * curr_node = window->children.first;
@@ -1058,7 +1076,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
-		free_tree(last_window);
+		//free_tree(last_window);
 		return FALSE;
 	}
 	return selected_slot;
