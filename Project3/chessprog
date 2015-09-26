@@ -2,4 +2,4 @@
 
 setenv LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib/mxml-2.8/lib
 
-./ChessMain $argv 
+./ChessMain $argv

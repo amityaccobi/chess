@@ -3,18 +3,9 @@
 
 int main(int argc, char * argv[]) {
 	srand((int)time(0));  
-	if (argc==1){
-	printf("Console or GUI? (c/g)\n");
-	char c[3];
-	scanf("%s", c);
-	if (c[0] == 'c')
+	if (argc==1 || (strcmp(argv[1], "console") == 0))
 		return console_mode();
-	else 
+	else if ((strcmp(argv[1], "gui") == 0))
 		return gui_mode();
-	}
-	if (argc > 1 && (strcmp(argv[1], "gui") == 0))
-		return gui_mode();
-	else
-		return console_mode();
 	return 0;
 }
