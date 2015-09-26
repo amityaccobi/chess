@@ -6,7 +6,7 @@ extern move error_move;
 extern cord error_cord;
 int game_over = FALSE;
 int is_castling_now = FALSE;
-int checking_player = -1;
+int display_check = TRUE;
 int check_recipient = WHITE;
 
 gui_tree_node* window = NULL;
@@ -1642,20 +1642,12 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				return GAME_WINDOW;
 			}
 		}
-		else if ((game_settings->is_next_checked)){
-			if (checking_player == -1){
-				checking_player = other_player(game_settings->next);
-				if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
-					free_list(&all_possible_moves, free);
-					return FALSE;
-				}
+		else if ((game_settings->is_next_checked) && display_check){
+			display_check = FALSE;
+			if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
+				free_list(&all_possible_moves, free);
+				return FALSE;
 		}
-			if (checking_player == game_settings->next){
-				if (!create_popup(game_settings, 0, CHECK_MESSAGE)){
-					free_list(&all_possible_moves, free);
-					return FALSE;
-				}
-			}
 		}
 	}
 	while (SDL_WaitEvent(&event)){
@@ -1716,7 +1708,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 
 					//second click on board was made
 					//make a movement to piece_cord location:
-					checking_player = -1;
 					move *curr_move = get_selected_move(*moves_of_piece, piece_cord);
 					if (curr_move != NULL){
 						//promotion case:
@@ -1760,6 +1751,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						// play - move piece to target location
 						move to_play = *curr_move;
 						board_copy(to_play.board, game_settings->board);
+						display_check = TRUE;
 						game_settings->is_next_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
 
 						free_tree_without_root(game_panel);
