@@ -1588,6 +1588,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			return FALSE;
 		}
 		free_list(&comp_moves, free);
+		is_castling_now = FALSE;
 	}
 
 	moves all_possible_moves = make_all_moves(game_settings);
