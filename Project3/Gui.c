@@ -212,7 +212,7 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 							200, 75, 0, 325, GUI_SET);
 						// error occured
 						if (clicked_mode_button == -1){
-							if (!create_popup(default_settings, 0, INVALID_SET_MESSAGE)){
+							if (!create_popup(default_settings, 0, ERROR_LOADING)){
 								return FALSE;
 							}
 							return FALSE;
@@ -1040,7 +1040,6 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
-		//free_tree(last_window);
 		for (int i = 0; i < num_of_controls; i++)
 			free(dialog_conrtol[i]);
 		free(dialog_conrtol);
@@ -1050,14 +1049,17 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
 
 	// chekc that if an 'empty slot' is clicked -> nothing will happend
-	sprintf(slot, "save%d.xml", selected_slot);
+	sprintf(slot, "save%d.xml", selected_slot-1);
 	while ((special_dialog == GUI_LOAD) && (selected_slot >= 1)){
-		if (!load_game(slot, &tmp_settings)){
+		if (!load_game(slot, &tmp_settings)) {
+			if (!create_popup(default_settings, 0, ERROR_LOADING))
+				selected_slot = -1;
 			selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
-			//if (selected_slot < 1)
-			//break;
-			sprintf(slot, "save%d.xml", selected_slot);
+			sprintf(slot, "save%d.xml", selected_slot - 1);
+			
 		}
+		else
+			break;
 	}
 
 	// free the malloced controls
@@ -1873,7 +1875,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						break;
 					}
 					else{
-						continue;
+						continue; //TODO;
 					}
 				}
 			}
