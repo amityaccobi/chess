@@ -911,7 +911,7 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 		board_copy(cur_move->board, next_set.board);
 		next_set.next = other_player(player);
 		check_castling_conditions(&next_set);
-		cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty, FALSE);
+		cur_score = minimax(next_set, alpha, beta, !is_maxi_player, depth - 1, is_best_difficulty, TRUE);
 		if (cur_score == SCORE_ERROR) { //there was an error, return an error score
 			free_list(&possible_moves, &free);
 			return SCORE_ERROR;
@@ -922,7 +922,7 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 			alpha = maxi(alpha, minimax_score);
 		else
 			beta = mini(beta, minimax_score);
-		if ((beta <= alpha) && can_prune ) {
+		if ((beta < alpha) || ((beta == alpha) && can_prune )) {
 			break; //pruning
 		}
 		curr = curr->next;
@@ -932,7 +932,7 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 }
 
 int get_best_depth(settings * set, int player) {
-	int board_score = score(set, player, player, TRUE);
+	int board_score = score(set, player, player, FALSE);
 	if (board_score == 0)
 		return 4;
 	else if (board_score > 0)
