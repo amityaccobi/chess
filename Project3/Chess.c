@@ -726,7 +726,7 @@ move get_castling_move(settings  * set, cord curr, int color) {
 				(board_piece(set->board, c2) == EMPTY) &&
 				(board_piece(set->board, c3) == EMPTY) && !is_cord_checked(c3, color, set->board))) {
 				castle.end = c3;
-				king_dest = c6;
+				king_dest = c2;
 			}
 			else // relevant rook cannot castle
 				return castle;
