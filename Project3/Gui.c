@@ -989,8 +989,7 @@ int create_opening_popup(){
 int create_dialog(settings *default_settings, int num_of_controls,
 	int control_width, int control_hight, int label_location_x, int label_location_y, int special_dialog){
 
-	gui_tree_node *panel, *dialog_panel, *controls_panel, *cancel_button, *last_window;
-	last_window = window;
+	gui_tree_node *panel, *dialog_panel, *controls_panel, *cancel_button;
 	gui_tree_node **dialog_conrtol = (gui_tree_node**)malloc(num_of_controls*sizeof(gui_tree_node*));
 	if (dialog_conrtol == NULL){
 		return -1;
