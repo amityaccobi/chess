@@ -1356,6 +1356,9 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 	int board_frame = 0;
 	int comp_turn = (is_comp) ? ACTIVE : UNACTIVE;
 	move *curr_move = NULL;
+	if (!mark_castle(panel->parent, &error_move, number_of_castling)){
+		return FALSE;
+	}
 	for (i = 0; i < BOARD_SIZE; i++){
 		for (j = 0; j < BOARD_SIZE; j++){
 			int is_active = UNACTIVE;
@@ -1380,9 +1383,9 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 							}
 						}
 						else{
-							if (!mark_castle(panel->parent, &error_move, number_of_castling)){
+							/*if (!mark_castle(panel->parent, &error_move, number_of_castling)){
 								return FALSE;
-							}
+							}*/
 							is_active = ACTIVE + comp_turn;
 						}
 					}
@@ -1783,8 +1786,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					}
 
 					else { // the selected tool is not the right player tool
-						//next_window = listener_to_game_window(game_settings, game_panel, side_panel, save_button, main_menu_button,
-						//	quit_button, board_tools, get_best_move_button, all_piece_possible_moves, to_move, moves_of_piece, error_cord);
 						free_list(moves_of_piece, free);
 						if (all_possible_moves.len>0){
 							free_list(&all_possible_moves, free);
@@ -1794,7 +1795,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				}
 			}
 
-								//click on side control
+			//click on side control
 			else if (is_inside_gui_tree_node(main_menu_button, event.button.x, event.button.y)){
 				game_over = FALSE;
 				return MAIN_WINDOW;
