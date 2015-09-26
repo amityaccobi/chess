@@ -1356,9 +1356,6 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 	int board_frame = 0;
 	int comp_turn = (is_comp) ? ACTIVE : UNACTIVE;
 	move *curr_move = NULL;
-	if (!mark_castle(panel->parent, &error_move, number_of_castling)){
-		return FALSE;
-	}
 	for (i = 0; i < BOARD_SIZE; i++){
 		for (j = 0; j < BOARD_SIZE; j++){
 			int is_active = UNACTIVE;
@@ -1383,9 +1380,9 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 							}
 						}
 						else{
-							/*if (!mark_castle(panel->parent, &error_move, number_of_castling)){
+							if (!mark_castle(panel->parent, &error_move, number_of_castling)){
 								return FALSE;
-							}*/
+							}
 							is_active = ACTIVE + comp_turn;
 						}
 					}
@@ -1579,9 +1576,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		free_tree_without_root(game_panel);
 		if (!add_node(&comp_moves, &player_move, sizeof(move))){
 			free_list(&comp_moves, free);
-			return FALSE;
-		}
-		if (comp_moves.len == -1){
 			return FALSE;
 		}
 		if (!draw_board(game_settings, game_panel, board_tools, comp_moves, TRUE, error_cord)){
@@ -1802,6 +1796,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			}
 			//checking if there was a cilck on castling arrows
 			else if ((is_inside_gui_tree_node(game_panel->parent, event.button.x, event.button.y)) && is_castling_now){
+
+				int piece_color = ((event.button.y >= 0) && (event.button.y <= 33)) ? BLACK : WHITE;
+				if (piece_color != game_settings->next)
+					continue;
 				int frame_offset = 33;
 				//up left castling
 				if ((event.button.x >= ((SQUARE_SIZE * 2) + frame_offset)) && (event.button.x <= ((SQUARE_SIZE * 4) + frame_offset)) &&
@@ -1975,6 +1973,21 @@ int mark_selected_cord(settings *game_settings, gui_tree_node *game_panel, gui_t
 // mark the givven moves_for_piece on the board
 int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_panel,
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], cord piece_cord, moves moves_for_piece, int blue_mark){
+	//resetting the frame to be without castling moves
+	int number_of_castling = how_many_castling(moves_for_piece);
+	if (number_of_castling == 0){
+		if (!create_image(0, 1050, 33, 0, 600, 33, tools_img, game_panel->parent)){
+			return FALSE;
+		}
+		if (!create_image(0, 1050, 33, 633, 600, 33, tools_img, game_panel->parent)){
+			return FALSE;
+		}
+
+		/*if (!mark_castle(game_panel->parent, &error_move, number_of_castling)){
+			return FALSE;
+		}*/
+	}
+
 	free_tree_without_root(game_panel);
 	if (!draw_board(game_settings, game_panel, board_tools, moves_for_piece, blue_mark, error_cord)){
 		free_list(&moves_for_piece, free);
@@ -1995,6 +2008,15 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling){
 	int frame_offset = 33;
 	int castling_frame = 0;
+	/*if ((curr_move->is_castle != TRUE) && (number_of_castling == 0)){
+		if (!create_image(0, 330, 0, 0, 33, 666, tools_img, board_panel)){
+			return FALSE;
+		}
+		if (!create_image(0, 330, 633, 0, 33, 666, tools_img, board_panel)){
+			return FALSE;
+		}
+		return TRUE;
+	}*/
 	if (curr_move->is_castle != TRUE)
 		return TRUE;
 	if (curr_move->start.y == 0){
