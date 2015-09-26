@@ -36,7 +36,7 @@
 /**** LIST OF FUNCS ****/
 /***********************/
 int gui_mode();
-//int create_main_window();
+int create_opening_popup();
 int create_main_window(settings *default_settings);
 int create_load_save_window(settings *default_settings, int is_save);
 int create_settings_window(settings *default_settings);
@@ -47,7 +47,6 @@ int create_player_selection_window(settings *default_settings);
 int listener_to_player_selection_window(settings *default_settings, gui_tree_node *player_vs_player_button,
 	gui_tree_node *player_vs_comp_button, gui_tree_node *cancel_button);
 int create_main_window();
-//int listener_to_main_window(gui_tree_node *new_game_btn, gui_tree_node *load_game_btn, gui_tree_node *quit_btn);
 int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_button, gui_tree_node *load_game_button, gui_tree_node *quit_button);
 int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *set_board_button, int is_save);
@@ -67,8 +66,6 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 void set_square_selected(gui_tree_node *board_tools);
 void get_player_next_moves(gui_tree_node *board_tools);
 int piece_type(char c);
-
-
 move* get_relevent_marked_move(cord piece_cord, moves *moves_for_piece);
 int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_panel,
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE], cord piece_cord, moves moves_for_piece, int blue_mark);

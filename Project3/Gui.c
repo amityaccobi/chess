@@ -8,11 +8,12 @@ int game_over = FALSE;
 int is_castling_now = FALSE;
 int display_check = TRUE;
 int check_recipient = WHITE;
+int is_fisrt_open = TRUE;
 
 gui_tree_node* window = NULL;
 SDL_Surface* buttons_img = NULL;
 SDL_Surface* popup_img = NULL;
-SDL_Surface* board_img = NULL;
+SDL_Surface* opening_img = NULL;
 SDL_Surface* tools_img = NULL;
 SDL_Surface* dialog_frame = NULL;
 
@@ -35,8 +36,8 @@ int gui_mode(){
 	if (popup_img == NULL){
 		exit(0);
 	}
-	board_img = SDL_LoadBMP("sprites/board.bmp");
-	if (board_img == NULL){
+	opening_img = SDL_LoadBMP("sprites/opening.bmp");
+	if (opening_img == NULL){
 		exit(0);
 	}
 	tools_img = SDL_LoadBMP("sprites/tools2.bmp");
@@ -53,7 +54,7 @@ int gui_mode(){
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 		exit(0);
-
+	
 	cur_window = create_main_window(&game_settings);
 	while (cur_window != QUIT_PROGRAM){
 		switch (cur_window){
@@ -78,7 +79,7 @@ int gui_mode(){
 	if (window != NULL)
 		free_tree(window);
 	SDL_FreeSurface(buttons_img);
-	SDL_FreeSurface(board_img);
+	SDL_FreeSurface(opening_img);
 	SDL_FreeSurface(tools_img);
 	SDL_Quit();
 	return 0;
@@ -105,37 +106,37 @@ int create_main_window(settings *default_settings){
 	window = create_window(800, 600);
 	if (window == NULL)
 		return FALSE;
+	if (is_fisrt_open){
+		if (!create_opening_popup())
+			return FALSE;
+		is_fisrt_open = FALSE;
+	}
 	// create the panel
 	if (!(create_panel(0, 0, 800, 600, window))){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the window label "main window"
 	if (!create_image(0, 0, 250, 0, 300, 100, buttons_img, panel)){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	//create new game button 
 	if (!create_button(0, 100, 300, 150, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	new_game_button = panel->children.last->data;
 	// create load game button
 	if (!create_button(0, 175, 300, 250, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	load_game_button = panel->children.last->data;
 	// create quit game button
 	if (!create_button(0, 250, 300, 350, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	quit_button = panel->children.last->data;
@@ -191,7 +192,7 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 				return SETTINGS_WINDOW;
 
 			}
-								 // click on load_game_button
+			// click on load_game_button
 			else if (is_inside_gui_tree_node(load_game_button, eventt.button.x, eventt.button.y)) {
 				
 				//clicked_button can return: 0 = cancel was clicked, [1...] = the [i+1....]th save\load slots 
@@ -313,7 +314,7 @@ int listener_to_player_selection_window(settings *default_settings, gui_tree_nod
 				default_settings->mode = PLAYER_VS_PLAYER;
 				return SET_BOARD_WINDOW;
 			}
-								// click on player_vs_comp_button
+			// click on player_vs_comp_button
 			else if (is_inside_gui_tree_node(player_vs_comp_button, eventt.button.x, eventt.button.y)){
 				default_settings->mode = PLAYER_VS_COMP;
 				return SETTINGS_WINDOW;
@@ -629,7 +630,6 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 	//draw the set window
 	if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 		free_tree(last_window);
-		//free_tree(last_window);
 		return FALSE;
 	}
 	SDL_WM_SetCaption("Set Board Window", NULL);
@@ -937,6 +937,51 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 	return TRUE;
 }
 
+// creating opening popup
+int create_opening_popup(){
+
+	gui_tree_node *panel, *last_window;
+	last_window = window;
+	//create panel
+	if (!create_panel(0, 0, 800, 600, window)){
+		free_tree(last_window);
+		return FALSE;
+	}
+	panel = window->children.last->data;
+	//create the message label
+	if (!create_image(0, 0, 0, 0, 800, 600, opening_img, panel)){
+		free_tree(last_window);
+		return FALSE;
+	}
+	//draw the popup
+	if (!draw_tree(window)){
+		free_tree(last_window);
+		return FALSE;
+	}
+	if (SDL_Flip(window->surface) != 0) {
+		free_tree(last_window);
+		return FALSE;
+	}
+	// set a delay of 1 sec
+	SDL_Delay(2500);
+	// remove the popup from the UI tree
+	node * popup_node = window->children.first = NULL;
+	window->children.first = NULL;
+	window->children.last = NULL;
+	free(popup_node);
+	window->children.len = 0;
+
+	// re-draw the tree
+	if (!draw_tree(window)){
+		return FALSE;
+	}
+	if (SDL_Flip(window->surface) != 0) {
+		free_tree(last_window);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 //create a generic dialog
 //it return -1 when error
 //0 for click on cancel_button
@@ -978,34 +1023,30 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	//creating the dialog frame
 	if (!create_image(0, 0, 0, 0, window_width + 2, window_hight + 2, dialog_frame, dialog_panel)){
-		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
 	// creating the dialog inner (useful) panel
 	if (!create_panel(1, 1, window_width, window_hight, dialog_panel)){
-		//free(last_window);
 		free(dialog_conrtol);
 		return FALSE;
 	}
 	panel = dialog_panel->children.last->data;
 	//create the dialog label
 	if (!create_image(label_location_x, label_location_y, 1, 1, label_width, label_hight, buttons_img, panel)){
-		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
 	//create the cancel button
 	if (!create_button(0, 576, (mid_panel - 48),
 		label_hight + (num_of_controls*control_hight), cancel_button_hight, cancel_button_width, buttons_img, panel)){
-		//free_tree(last_window);
 		free(dialog_conrtol);
 		return -1;
 	}
 	cancel_button = panel->children.last->data;
 	//create the controls panel (where the controls are located)
-	if (!create_panel(mid_panel - (controls_panel_width / 2), label_hight, controls_panel_width, (num_of_controls*control_hight), panel)){
-		//free_tree(last_window);
+	if (!create_panel(mid_panel - (controls_panel_width / 2), label_hight, controls_panel_width, 
+														(num_of_controls*control_hight), panel)){
 		free(dialog_conrtol);
 		return -1;
 	}
@@ -1021,8 +1062,8 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		}
 		// create the controls
 		if (!create_button(label_location_x + special_dialog_active, label_location_y + label_hight + ((i * control_hight)*different_control),
-			special_set_active + (((controls_panel_width) / 2) - (control_width / 2)), (i * control_hight), control_width, control_hight, buttons_img, controls_panel)){
-			//free_tree(last_window);
+			special_set_active + (((controls_panel_width) / 2) - (control_width / 2)), (i * control_hight), control_width,
+																			control_hight, buttons_img, controls_panel)){
 			free(dialog_conrtol);
 			return -1;
 		}
@@ -1046,20 +1087,24 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		return -1;
 	}
 
-	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
+	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls,
+																											special_dialog);
 
 	// chekc that if an 'empty slot' is clicked -> nothing will happend
-	sprintf(slot, "save%d.xml", selected_slot-1);
-	while ((special_dialog == GUI_LOAD) && (selected_slot >= 1)){
-		if (!load_game(slot, &tmp_settings)) {
-			if (!create_popup(default_settings, 0, ERROR_LOADING))
-				selected_slot = -1;
-			selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls, special_dialog);
-			sprintf(slot, "save%d.xml", selected_slot - 1);
-			
+	if (special_dialog == GUI_LOAD){
+		sprintf(slot, "save%d.xml", selected_slot - 1);
+		while ((selected_slot >= 1)){
+			if (!load_game(slot, &tmp_settings)) {
+				if (!create_popup(default_settings, 0, ERROR_LOADING))
+					selected_slot = -1;
+				selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel,
+					num_of_controls, special_dialog);
+				sprintf(slot, "save%d.xml", selected_slot - 1);
+
+			}
+			else
+				break;
 		}
-		else
-			break;
 	}
 
 	// free the malloced controls
@@ -1078,7 +1123,6 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
-		//free_tree(last_window);
 		return FALSE;
 	}
 	return selected_slot;
@@ -1115,115 +1159,6 @@ int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_setting
 	}
 	return -1;
 }
-
-// create the Save Load window
-/*int create_load_save_window(settings *default_settings,int is_save){
-gui_tree_node *panel, *cancel_button, *set_board_button, *label, *last_window;
-gui_tree_node *slot[NUM_OF_MEMORY_SLOTS];
-int i, slot_button_active, is_save_window;
-last_window = window;
-settings tmp_settings = { 0 };
-memcpy(&tmp_settings, default_settings, sizeof(settings));
-
-
-// create the UI tree (all the controls) in the window
-window = create_window(800, 600);
-if (window == NULL)
-return FALSE;
-if (!create_panel(0, 0, 800, 600, window)){
-free(last_window);
-return FALSE;
-}
-panel = window->children.last->data;
-
-//check if this is a Save_Game window or a Load_Game window
-is_save_window = (is_save) ? ACTIVE : UNACTIVE;
-if (!create_image(is_save_window, 1200, 250, 0, 300, 100, buttons_img, panel)){
-free(last_window);
-return FALSE;
-}
-label = panel->children.last->data;
-for (i = 0; i < NUM_OF_MEMORY_SLOTS; i++){
-//check if button should be active or not
-slot_button_active = (load_game(path[i], &tmp_settings)) ? ACTIVE : UNACTIVE;
-if (!create_button(slot_button_active, 1300 + (i * 50), 300, 125 + (i * 60),
-200, 50, buttons_img, panel))
-return FALSE;
-slot[i] = panel->children.last->data;
-}
-if (!create_button(0, 899, 550, 500, 100, 75, buttons_img, panel)){
-free(last_window);
-return FALSE;
-}
-cancel_button = panel->children.last->data;
-if (!create_button(199, 899, 150, 500, 100, 75, buttons_img, panel)){
-free(last_window);
-return FALSE;
-}
-set_board_button = panel->children.last->data;
-if (is_save_window){
-SDL_WM_SetCaption("Save Game Window", NULL);
-}
-if (!is_save_window){
-SDL_WM_SetCaption("Load Game Window", NULL);
-}
-if (!draw_tree(window)){
-free(last_window);
-return FALSE;
-}
-
-if (SDL_Flip(window->surface) != 0) {
-free(last_window);
-return FALSE;
-}
-
-free_tree(last_window);
-return listener_to_load_save_window(slot, default_settings, cancel_button, set_board_button, is_save);
-}
-
-
-
-// the listener for Save Load window controls
-int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_settings,
-gui_tree_node *cancel_button, gui_tree_node *set_board_button, int is_save){
-SDL_Event eventt;
-int i;
-while (SDL_WaitEvent(&eventt)){
-switch (eventt.type){
-case(SDL_MOUSEBUTTONUP) :
-if (is_inside_gui_tree_node(cancel_button, eventt.button.x, eventt.button.y)){
-return MAIN_WINDOW;
-}
-else if (is_inside_gui_tree_node(set_board_button, eventt.button.x, eventt.button.y)){
-return SET_BOARD_WINDOW;
-}
-else{
-for (i = 0; i < NUM_OF_MEMORY_SLOTS; i++){
-if (is_inside_gui_tree_node(slot[i], eventt.button.x, eventt.button.y)){
-if (is_save){
-if (save_game(path[i], default_settings))
-return MAIN_WINDOW;
-else{
-continue;
-}
-}
-else{
-if (load_game(path[i], default_settings))
-return PLAYER_SELECTION_WINDOW;
-else{
-continue;
-}
-}
-}
-}
-}
-default:
-break;
-}
-}
-return FALSE;
-}
-*/
 
 
 // create the "Game window"
@@ -1396,7 +1331,7 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 				}
 			}
 			switch (game_settings->board[i][j]){
-				/*make create_square*/
+			/*make create_square*/
 			case(WHITE_P) :
 				if (!create_button(5 * SQUARE_SIZE + is_active, 3 * SQUARE_SIZE - square_color,
 					board_frame + i * SQUARE_SIZE, board_frame + (7 * SQUARE_SIZE) - j * SQUARE_SIZE,
@@ -1527,8 +1462,8 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	// comp turn
 	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next) && (!game_over)){
 		player_move = computer_turn(game_settings);
-		//TODO
-		//FREE STUFF IF player_move.promotion == -1 !!!!!!!!!!!!!!!!!!!!
+		if (player_move.promotion == -1)
+			return FALSE;
 		if (!game_over){
 			if (player_move.promotion == NO_MOVE_CODE){
 				if (was_checked){
@@ -1593,8 +1528,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 
 	moves all_possible_moves = make_all_moves(game_settings);
 	if (all_possible_moves.len == -1){
-		//TODO
-		/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++FREEEEEEE STUUUUUUUUUUUUUUFFFFFFFFFFFFFFFFF+++++++++++++++*/
+		return FALSE;
 	}
 	//check for mate/tie/check
 	if ((!game_over)){
@@ -1695,8 +1629,9 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							}
 							to_move = TRUE;
 						}
-						next_window = listener_to_game_window(game_settings, game_panel, side_panel, turn_protocol_panel, save_button, main_menu_button,
-							quit_button, board_tools, get_best_move_button, &all_possible_moves, to_move, &moves_for_piece, piece_cord);
+						next_window = listener_to_game_window(game_settings, game_panel, side_panel, 
+							turn_protocol_panel, save_button, main_menu_button,	quit_button, board_tools,
+							get_best_move_button, &all_possible_moves, to_move, &moves_for_piece, piece_cord);
 
 						if (all_possible_moves.len > 0){
 							free_list(&all_possible_moves, free);
@@ -1867,6 +1802,8 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						break;
 					}
 					else{
+						if (!create_popup(game_settings, 0, ERROR_LOADING))
+							return FALSE;
 						continue; //TODO;
 					}
 				}
