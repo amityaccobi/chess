@@ -1982,10 +1982,7 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 		if (!create_image(0, 1050, 33, 633, 600, 33, tools_img, game_panel->parent)){
 			return FALSE;
 		}
-
-		/*if (!mark_castle(game_panel->parent, &error_move, number_of_castling)){
-			return FALSE;
-		}*/
+		is_castling_now = FALSE;
 	}
 
 	free_tree_without_root(game_panel);
@@ -2008,15 +2005,6 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling){
 	int frame_offset = 33;
 	int castling_frame = 0;
-	/*if ((curr_move->is_castle != TRUE) && (number_of_castling == 0)){
-		if (!create_image(0, 330, 0, 0, 33, 666, tools_img, board_panel)){
-			return FALSE;
-		}
-		if (!create_image(0, 330, 633, 0, 33, 666, tools_img, board_panel)){
-			return FALSE;
-		}
-		return TRUE;
-	}*/
 	if (curr_move->is_castle != TRUE)
 		return TRUE;
 	if (curr_move->start.y == 0){
