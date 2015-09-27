@@ -30,33 +30,39 @@ int gui_mode(){
 
 	buttons_img = SDL_LoadBMP("sprites/buttons3.bmp");
 	if (buttons_img == NULL){
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		exit(0);
 	}
 	popup_img = SDL_LoadBMP("sprites/popup2.bmp");
 	if (popup_img == NULL){
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		exit(0);
 	}
 	opening_img = SDL_LoadBMP("sprites/opening.bmp");
 	if (opening_img == NULL){
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		exit(0);
 	}
 	tools_img = SDL_LoadBMP("sprites/tools2.bmp");
 	if (tools_img == NULL){
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		exit(0);
 	}
 	dialog_frame = SDL_LoadBMP("sprites/dialog_frame.bmp");
 	if (dialog_frame == NULL){
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		exit(0);
 	}
 	cur_window = MAIN_WINDOW;
 	gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE];
 
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		exit(0);
-	
+	}
 	cur_window = create_main_window(&game_settings);
-	while (cur_window != QUIT_PROGRAM){
+	while ((cur_window != QUIT_PROGRAM) && (cur_window != FALSE)){
 		switch (cur_window){
 		case (MAIN_WINDOW) :
 			reset_game(&game_settings);
@@ -114,29 +120,34 @@ int create_main_window(settings *default_settings){
 	// create the panel
 	if (!(create_panel(0, 0, 800, 600, window))){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the window label "main window"
 	if (!create_image(0, 0, 250, 0, 300, 100, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	//create new game button 
 	if (!create_button(0, 100, 300, 150, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	new_game_button = panel->children.last->data;
 	// create load game button
 	if (!create_button(0, 175, 300, 250, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	load_game_button = panel->children.last->data;
 	// create quit game button
 	if (!create_button(0, 250, 300, 350, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	quit_button = panel->children.last->data;
@@ -144,11 +155,14 @@ int create_main_window(settings *default_settings){
 	SDL_WM_SetCaption("!Chessky, The Game Of Kings!", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	free_tree(last_window);
@@ -263,36 +277,44 @@ int create_player_selection_window(settings *default_settings){
 		return FALSE;
 	if (!create_panel(0, 0, 800, 600, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	if (!create_image(0, 325, 250, 0, 300, 100, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_button(0, 425, 300, 150, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	player_vs_player_button = panel->children.last->data;
 	if (!create_button(0, 500, 300, 250, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	player_vs_comp_button = panel->children.last->data;
 	if (!create_button(0, 575, 300, 350, 200, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	cancel_button = panel->children.last->data;
 	SDL_WM_SetCaption("Player Selection", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
@@ -347,30 +369,35 @@ int create_settings_window(settings *default_settings){
 		return FALSE;
 	if (!create_panel(0, 0, 800, 600, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the window header ("setting window")
 	if (!create_image(0, 650, 250, 0, 300, 100, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (default_settings->mode == PLAYER_VS_COMP){
 		//creating the label "user color"
 		if (!create_image(0, 1072, 300, 200, 200, 50, buttons_img, panel)){
 			free_tree(last_window);
+			window = NULL;
 			return FALSE;
 		}
 		color = default_settings->color;
 		//create the color change button
 		if (!create_button(0, 750 + (50 * color), 350, 250, 100, 50, buttons_img, panel)){
 			free_tree(last_window);
+			window = NULL;
 			return FALSE;
 		}
 		color_button = panel->children.last->data;
 		// create difficulty label
 		if (!create_image(0, 1023, 300, 300, 200, 50, buttons_img, panel)){
 			free_tree(last_window);
+			window = NULL;
 			return FALSE;
 		}
 		difficulty = default_settings->minimax_depth;
@@ -378,6 +405,7 @@ int create_settings_window(settings *default_settings){
 		if (!create_button(difficulty * 50, 973, 375, 350,
 			50, 50, buttons_img, panel)){
 			free_tree(last_window);
+			window = NULL;
 			return FALSE;
 		}
 		diff_button = panel->children.last->data;
@@ -385,6 +413,7 @@ int create_settings_window(settings *default_settings){
 	//create next_player label
 	if (!create_image(0, 1122, 300, 100, 200, 50, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
@@ -392,35 +421,42 @@ int create_settings_window(settings *default_settings){
 	//create next player button
 	if (!create_button(0, 750 + (50 * next_player_color), 350, 150, 100, 50, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	next_player_button = panel->children.last->data;
 	//create "set board" button
 	if (!create_button(199, 899, 500, 500, 100, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	set_board_button = panel->children.last->data;
 	//create ok button
 	if (!create_button(100, 899, 200, 500, 100, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	ok_button = panel->children.last->data;
 	//create cancel button
 	if (!create_button(0, 899, 350, 500, 100, 75, buttons_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	cancel_button = panel->children.last->data;
 	SDL_WM_SetCaption("Settings Window", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
@@ -558,71 +594,84 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 	//create the board panel
 	if (!create_panel(0, 0, 666, 666, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	board_panel = window->children.last->data;
 	//create the side panel
 	if (!create_panel(666, 0, 200, 666, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	side_panel = window->children.last->data;
 	//create the add button
 	if (!create_button(0, 1800, 0, 0, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	add_button = side_panel->children.last->data;
 	//create the remove button
 	if (!create_button(100, 1800, 100, 0, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	remove_button = side_panel->children.last->data;
 	// create the move button
 	if (!create_button(200, 1800, 0, 75, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	move_button = side_panel->children.last->data;
 	//create the clear button
 	if (!create_button(300, 1800, 100, 75, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	clear_button = side_panel->children.last->data;
 	//create start button
 	if (!create_button(0, 1875, 0, 535, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	start_button = side_panel->children.last->data;
 	//create the cancel button
 	if (!create_button(100, 1875, 100, 535, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	cancel_button = side_panel->children.last->data;
 	//create the board frames (4 frames - 2 vertical+2 horizontal)
 	if (!create_image(0, 330, 0, 0, 33, 666, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 330, 633, 0, 33, 666, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 1050, 33, 0, 600, 33, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 1050, 33, 633, 600, 33, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	//create the game board
 	if (!create_panel(33, 33, 600, 600, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	game_panel = board_panel->children.last->data;
@@ -630,16 +679,20 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 	//draw the set window
 	if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	SDL_WM_SetCaption("Set Board Window", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 
@@ -699,6 +752,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				}
 
 				if (SDL_Flip(window->surface) != 0) {
+					fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 					return FALSE;
 				}
 				return SET_BOARD_WINDOW;
@@ -753,6 +807,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 							}
 
 							if (SDL_Flip(window->surface) != 0) {
+								fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 								return FALSE;
 							}
 							return SET_BOARD_WINDOW;
@@ -795,6 +850,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				}
 
 				if (SDL_Flip(window->surface) != 0) {
+					fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 					return FALSE;
 				}
 				return SET_BOARD_WINDOW;
@@ -875,6 +931,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						}
 
 						if (SDL_Flip(window->surface) != 0) {
+							fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
@@ -897,21 +954,26 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 	//create panel
 	if (!create_panel(125, 250, 400, 200, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the message label
 	if (!create_image(popup_x_location, popup_y_location, 0, 0, 400, 200, popup_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	//draw the popup
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	// set a delay of 1 sec
@@ -931,7 +993,9 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	return TRUE;
@@ -945,21 +1009,26 @@ int create_opening_popup(){
 	//create panel
 	if (!create_panel(0, 0, 800, 600, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the message label
 	if (!create_image(0, 0, 0, 0, 800, 600, opening_img, panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	//draw the popup
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	// set a delay of 1 sec
@@ -976,7 +1045,9 @@ int create_opening_popup(){
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	return TRUE;
@@ -1072,7 +1143,6 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	// draw the GUI tree
 	if (!draw_tree(window)){
-		//free_tree(last_window);
 		for (int i = 0; i < num_of_controls; i++)
 			free(dialog_conrtol[i]);
 		free(dialog_conrtol);
@@ -1080,6 +1150,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	}
 
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		for (int i = 0; i < num_of_controls; i++)
 			free(dialog_conrtol[i]);
 		free(dialog_conrtol);
@@ -1122,6 +1193,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		return FALSE;
 	}
 	return selected_slot;
@@ -1174,36 +1246,42 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	//create the board panel
 	if (!create_panel(0, 0, 666, 666, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	board_panel = window->children.last->data;
 	// creathe the side panel
 	if (!create_panel(666, 0, 200, 666, window)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	side_panel = window->children.last->data;
 	// create the save button
 	if (!create_button(0, 1725, 50, 10, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	save_button = side_panel->children.last->data;
 	//create the main menu button
 	if (!create_button(100, 1725, 50, 85, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	main_menu_button = side_panel->children.last->data;
 	// create the get best moves button
 	if (!create_button(300, 1725, 50, 160, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	get_best_move_button = side_panel->children.last->data;
 	//create the quit button
 	if (!create_button(200, 1725, 50, 500, 100, 75, buttons_img, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	quit_button = side_panel->children.last->data;
@@ -1211,6 +1289,7 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	//create turn protocol panel
 	if (!create_panel(25, 250, 150, 150, side_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	turn_protocol_panel = side_panel->children.last->data;
@@ -1222,6 +1301,7 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	else {
 		if (!create_image(player_color_shift, 2636, 0, 0, 150, 150, buttons_img, turn_protocol_panel)){
 			free_tree(last_window);
+			window = NULL;
 			return FALSE;
 		}
 	}
@@ -1229,22 +1309,27 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	//create the frame around the game (4 frames = 2 vertical+2 horizontal)
 	if (!create_image(0, 330, 0, 0, 33, 666, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 330, 633, 0, 33, 666, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 1050, 33, 0, 600, 33, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_image(0, 1050, 33, 633, 600, 33, tools_img, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	if (!create_panel(33, 33, 600, 600, board_panel)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	game_panel = board_panel->children.last->data;
@@ -1252,14 +1337,19 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 	//draw the game window
 	if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	SDL_WM_SetCaption("Game Window", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
+		window = NULL;
+		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_tree(last_window);
+		window = NULL;
 		return FALSE;
 	}
 	int next_window = listener_to_game_window(game_settings, game_panel, side_panel, turn_protocol_panel, save_button, main_menu_button,
@@ -1293,7 +1383,7 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 	for (i = 0; i < BOARD_SIZE; i++){
 		for (j = 0; j < BOARD_SIZE; j++){
 			int is_active = UNACTIVE;
-			int square_color = ((i + j) % 2 == 0) ? 0 : SQUARE_SIZE;
+			int square_color = ((i + j) % 2 == 1) ? 0 : SQUARE_SIZE;
 			gui_tree_node *cur_square = NULL;
 			if (possible_moves.first != NULL){
 				node * curr_node = possible_moves.first;
@@ -1474,8 +1564,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							return FALSE;
 						if (!draw_tree(window))
 							return FALSE;
-						if (SDL_Flip(window->surface) != 0)
+						if (SDL_Flip(window->surface) != 0) {
 							return FALSE;
+							fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+						}
 						return FALSE;
 					}
 				}
@@ -1491,8 +1583,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					return FALSE;
 				if (!draw_tree(window))
 					return FALSE;
-				if (SDL_Flip(window->surface) != 0)
+				if (SDL_Flip(window->surface) != 0) {
 					return FALSE;
+					fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+				}
 				return GAME_WINDOW;
 			}
 			else if (was_checked){
@@ -1519,6 +1613,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			return FALSE;
 		}
 		if (SDL_Flip(window->surface) != 0) {
+			fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 			return FALSE;
 		}
 		free_list(&comp_moves, free);
@@ -1540,8 +1635,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						return FALSE;
 					if (!draw_tree(window))
 						return FALSE;
-					if (SDL_Flip(window->surface) != 0) 
+					if (SDL_Flip(window->surface) != 0) {
+						fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 						return FALSE;
+					}
 					return FALSE;
 				}
 				else{
@@ -1551,8 +1648,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						return FALSE;
 					if (!draw_tree(window))
 						return FALSE;
-					if (SDL_Flip(window->surface) != 0)
+					if (SDL_Flip(window->surface) != 0) {
+						fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 						return FALSE;
+					}
 					return GAME_WINDOW;
 				}
 			}
@@ -1567,8 +1666,10 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					return FALSE;
 				if (!draw_tree(window))
 					return FALSE;
-				if (SDL_Flip(window->surface) != 0)
+				if (SDL_Flip(window->surface) != 0) {
+					fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 					return FALSE;
+				}
 				check_castling_conditions(game_settings);
 				return GAME_WINDOW;
 			}
@@ -1700,6 +1801,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							return FALSE;
 						}
 						if (SDL_Flip(window->surface) != 0) {
+							fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 							free_list(moves_of_piece, free);
 							free_list(&all_possible_moves, free);
 							return FALSE;
@@ -1902,6 +2004,7 @@ int mark_selected_cord(settings *game_settings, gui_tree_node *game_panel, gui_t
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		return FALSE;
 	}
 	return TRUE;
@@ -1932,6 +2035,7 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 		return FALSE;
 	}
 	if (SDL_Flip(window->surface) != 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		free_list(&moves_for_piece, free);
 		return FALSE;
 	}

@@ -11,7 +11,7 @@ int add_child(gui_tree_node* child, gui_tree_node* parent){
 }
 
 void free_tree(gui_tree_node* root) {
-	if (root != NULL) {
+	if ((root != NULL) && (root->surface != NULL)) {
 		SDL_FreeSurface(root->surface);
 		free(root->offset_rect);
 		free_list(&root->children, free_tree);

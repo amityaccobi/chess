@@ -20,7 +20,7 @@
 #define GAME_WINDOW 6
 #define SET_BOARD_WINDOW 7
 #define QUIT_WINDOW 8
-#define QUIT_PROGRAM 0
+#define QUIT_PROGRAM 92
 
 #define CHECK_MESSAGE 0
 #define MATE_MESSAGE 200

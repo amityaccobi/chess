@@ -148,12 +148,13 @@ settings settings_state() {
 	int user_color = WHITE;
 	char input[51];
 	settings game_settings = { 0 };
+	settings temp_settings = { 0 };
 
 	//default settings:
-	game_settings.color = user_color;
-	game_settings.minimax_depth = depth;
-	game_settings.mode = mode;
-	game_settings.next = next;
+	game_settings.color = temp_settings.color = user_color;
+	game_settings.minimax_depth = temp_settings.minimax_depth = depth;
+	game_settings.mode = temp_settings.mode = mode;
+	game_settings.next = temp_settings.next = next;
 
 	clear(game_settings.board);
 	init_board(game_settings.board);
@@ -234,10 +235,11 @@ settings settings_state() {
 		}
 		// parse: load x
 		else if is_command_with_args(LOAD) {
-			if (!load_game(args, &game_settings))
+			if (!load_game(args, &temp_settings))
 				print_message(WRONG_FILE_NAME);
-			else if (!print_board(game_settings.board))
+			else if (!print_board(temp_settings.board))
 				exit(0);
+			game_settings = temp_settings;
 		}
 
 		// parse: clear
@@ -414,7 +416,7 @@ move user_turn(settings * game_settings, int was_checked) {
 	moves possible_moves = make_all_moves(game_settings);
 	moves moves_for_cord;
 	settings temp_settings;
-	double move_score;
+	int move_score;
 	if (possible_moves.len == -1){ // there was an error
 		exit(0);
 	}
@@ -476,9 +478,6 @@ move user_turn(settings * game_settings, int was_checked) {
 				return to_play;
 			}
 		}
-		// parse: castle <x,y>            ///CHECK IF MATCHING TO FLOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CHECK CHECK CHECK BLAH TODO
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		else if (is_command_with_args(CASTLE)){
 			cord c = parse_cord(args);
 			if ((c.x == -1)&& (c.y == -1)) {
@@ -487,6 +486,8 @@ move user_turn(settings * game_settings, int was_checked) {
 			}
 			else if (!is_valid_cord(c))
 				print_message(WRONG_POSITION);
+			else if (which_color(board_piece(game_settings->board, temp_move.start)) != game_settings->next)
+				print_message(NO_DICS);
 			else if (tolower(board_piece(game_settings->board, c)) != ROOK)
 				print_message(WRONG_ROOK_POSITION);
 			else {
@@ -557,15 +558,15 @@ move user_turn(settings * game_settings, int was_checked) {
 			board_copy(temp_move.board, temp_settings.board);
 			temp_settings.next = other_player(game_settings->next);
 			if (depth != 0) 
-				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE, TRUE);
+				move_score = (int) minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE, TRUE);
 			else // depth == 0 if best [since: atoi("best") = 0]
-				move_score = minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings, game_settings->next) - 1, TRUE, TRUE);
+				move_score = (int) minimax(temp_settings, INT_MIN, INT_MAX, FALSE, get_best_depth(game_settings, game_settings->next) - 1, TRUE, TRUE);
 
 			if (move_score == SCORE_ERROR){
 				free_list(&possible_moves, free);
 				return error_move;;
 			}
-			printf("%lf\n", move_score);
+			printf("%d\n", move_score);
 		}
 		else if (is_command_with_args(SAVE)) {
 			if (!save_game(args, game_settings)) {

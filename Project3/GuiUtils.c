@@ -14,7 +14,7 @@ gui_tree_node* create_window(int width, int height){
 	window->offset_rect = NULL;
 	window->surface = SDL_SetVideoMode(width, height, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	if (window->surface == NULL){
-		printf("window creation failed: %s\n", SDL_GetError());
+		fprintf(stderr, "window creation failed: %s\n", SDL_GetError());
 		free_tree(window);
 		return NULL;
 	}
@@ -40,7 +40,7 @@ int create_dialog_window(int width, int height, gui_tree_node* parent){
 
 	dialog_window.surface = SDL_SetVideoMode(width, height, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	if (dialog_window.surface == NULL){
-		printf("window creation failed: %s\n", SDL_GetError());
+		fprintf(stderr, "window creation failed: %s\n", SDL_GetError());
 		free(dialog_window.offset_rect);
 		return FALSE;
 	}
@@ -66,13 +66,13 @@ int create_panel(int x_offset, int y_offset, int width, int height, gui_tree_nod
 
 	panel.surface = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 32, rmask, gmask, bmask, amask);
 	if (panel.surface == NULL){
+		fprintf(stderr, "window creation failed: %s\n", SDL_GetError());
 		return FALSE;
-		//printf("error: memory allocation failed \n");
 	}
 	panel.children.len = 0;
 	panel.offset_rect = (SDL_Rect*)malloc(sizeof(SDL_Rect));
 	if (panel.offset_rect == NULL) {
-		//printf("ERROR: failed to allocate memory.");
+		perror_message("malloc");
 		free(panel.surface);
 		return FALSE;
 	}
@@ -104,6 +104,7 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 	img.offset_rect->y = ylocation;
 	img.surface = SDL_ConvertSurface(image_surface, image_surface->format, SDL_SWSURFACE);
 	if (img.surface == NULL){
+		fprintf(stderr, "surface conversion failed: %s\n", SDL_GetError());
 		free(img.offset_rect);
 		return FALSE;
 	}
@@ -116,12 +117,6 @@ int create_image(Sint16 xcut, Sint16 ycut, Sint16 xlocation, Sint16 ylocation,
 	return add_child(&img, parent);
 
 }
-
-//creating a button and connecting it to its parent in the UI tree, return if succeeded
-/*int create_button(Sint16 x_offset, Sint16 y_offset, Sint16 x_rect, Sint16 y_rect,
-	Uint16 width, Uint16 height, SDL_Surface* image_surface, gui_tree_node* parent, int marked){
-	return create_image(x_offset, y_offset, x_rect, y_rect, width, height, image_surface, parent, marked);
-}*/
 
 // draw the whole UI tree
 int draw_tree(gui_tree_node * tree_root) {
@@ -146,6 +141,7 @@ int draw_gui_tree_node(gui_tree_node* gui_tree_node) {
 	if (SDL_BlitSurface(gui_tree_node->surface, &(gui_tree_node->surface->clip_rect),
 						gui_tree_node->parent->surface, gui_tree_node->offset_rect) != 0) {
 		SDL_FreeSurface(gui_tree_node->surface);
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		return FALSE;
 	}
 	return TRUE;

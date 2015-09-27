@@ -142,7 +142,6 @@ typedef node move_node;
 /**** LIST OF FUNCS ****/
 /***********************/
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
-char make_board(char board[BOARD_SIZE][BOARD_SIZE], cord* moves);
 void copy_move(move * single_move, move* to_copy_move);
 int save_game(char * path, settings * game_settings);
 int load_game(char * path, settings * game_settings);
@@ -150,15 +149,11 @@ linked_list make_all_moves(settings * set);
 linked_list get_simple_moves(settings * set, cord curr);
 int score(settings * set, int scoring_player, int current_player, int is_best);
 int is_valid_move(linked_list all_valid_moves, move new_move);
-linked_list eat(char board[BOARD_SIZE][BOARD_SIZE], cord eater, int x_direction, int y_direction, int k, int is_chain);
 void board_copy(char original[BOARD_SIZE][BOARD_SIZE], char copy[BOARD_SIZE][BOARD_SIZE]);
 int is_valid_cord(cord c);
 void clear(char board[BOARD_SIZE][BOARD_SIZE]);
-int which_color(char c);
 int is_valid_board(char board[BOARD_SIZE][BOARD_SIZE]);
 settings settings_state();
-void remove_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece);
-void add_piece(char board[BOARD_SIZE][BOARD_SIZE], cord piece, int color, char type);
 move computer_turn(settings * game_settings);
 double minimax(settings set, double alpha, double beta, int is_maxi_player, int depth, int is_best_difficulty, int can_prune);
 moves best_next_moves(settings set, int maximizer);

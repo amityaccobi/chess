@@ -226,24 +226,46 @@ int load_game(char * path, settings * game_settings){
 		return FALSE;
 	xml_tree = mxmlLoadFile(NULL, fp, MXML_OPAQUE_CALLBACK);
 	fclose(fp);
-
+	if (!xml_tree) {
+		return FALSE;
+	}
 	xml_node = mxmlFindPath(xml_tree, "game/next_turn");
+	if (!xml_node) {
+			mxmlDelete(xml_tree);
+			return FALSE;
+	}
 	game_settings->next = (xml_node == NULL) ? WHITE : string_to_color(mxmlGetOpaque(xml_node));
 
 	xml_node = mxmlFindPath(xml_tree, "game/game_mode");
+	if (!xml_node) {
+		mxmlDelete(xml_tree);
+		return FALSE;
+	}
 	game_settings->mode = (xml_node == NULL) ? PLAYER_VS_COMP : atoi(mxmlGetOpaque(xml_node));
 
 	if (game_settings->mode == PLAYER_VS_COMP){
 		xml_node = mxmlFindPath(xml_tree, "game/difficulty");
+		if (!xml_node) {
+			mxmlDelete(xml_tree);
+			return FALSE;
+		}
 		game_settings->minimax_depth = (xml_node == NULL) ? 1 : atoi(mxmlGetOpaque(xml_node));
 
 		xml_node = mxmlFindPath(xml_tree, "game/user_color");
+		if (!xml_node) {
+			mxmlDelete(xml_tree);
+			return FALSE;
+		}
 		game_settings->color = (xml_node == NULL) ? WHITE : string_to_color(mxmlGetOpaque(xml_node));
 	}
 
 	for (int y = 8; y > 0; y--) {
 		row_node[15] = '0' + y;
 		xml_node = mxmlFindPath(xml_tree, row_node);
+		if (!xml_node) {
+			mxmlDelete(xml_tree);
+			return FALSE;
+		}
 		strcpy(row, mxmlGetOpaque(xml_node));
 		for (int x = 0; x < 8; x++) {
 			c.x = x;
@@ -251,7 +273,7 @@ int load_game(char * path, settings * game_settings){
 			board_piece(game_settings->board, c) = (row[x] == '_') ? EMPTY : row[x];
 		}
 	}
-	//mxmlDelete(xml_tree);
+	mxmlDelete(xml_tree);
 	return TRUE;
 }
 
@@ -262,22 +284,29 @@ int save_game(char * path, settings * game_settings) {
 	mxml_node_t * game_node;
 	mxml_node_t * board_node;
 	cord c;
+	char * color = (game_settings->mode == PLAYER_VS_COMP) ? color_string(game_settings->color) : "";
 	char row_name[6] = "row_x";
 	char row[9] = { 0 };
-	fp = fopen(path, "w");
-	if (fp == NULL)
-		return FALSE;
 
 	tree = mxmlNewXML("1.0");
 	game_node = mxmlNewElement(tree, "game");
-	mxmlNewInteger(mxmlNewElement(game_node, "game_mode"), game_settings->mode);
-	mxmlNewOpaque(mxmlNewElement(game_node, "user_color"), color_string(game_settings->color));
-	mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next));
 
-	if (game_settings->minimax_depth == BEST_DIFFICULTY)
-		mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), "best");
-	else
-		mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth);
+	if (!tree || !game_node) 
+		return FALSE;
+	if (!mxmlNewInteger(mxmlNewElement(game_node, "game_mode"), game_settings->mode))
+		return FALSE;
+	if (!mxmlNewOpaque(mxmlNewElement(game_node, "user_color"),color))
+			return FALSE;
+	if (!mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next)))
+		return FALSE;
+	if (game_settings->mode == PLAYER_VS_PLAYER)
+		if (!mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), ""))
+			return FALSE;
+	else if (game_settings->minimax_depth == BEST_DIFFICULTY)
+		if (!mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), "best"))
+			return FALSE;
+	else if (!mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth))
+		return FALSE;
 
 	board_node = mxmlNewElement(game_node, "board");
 
@@ -288,10 +317,18 @@ int save_game(char * path, settings * game_settings) {
 			row[x] = (board_piece(game_settings->board, c) == EMPTY) ? '_' : board_piece(game_settings->board, c);
 		}
 		row_name[4] = '0' + y;
-		mxmlNewOpaque(mxmlNewElement(board_node, row_name), row);
+		if (!mxmlNewOpaque(mxmlNewElement(board_node, row_name), row))
+			return FALSE;
 	}
 
-	mxmlSaveFile(tree, fp, MXML_NO_CALLBACK);
+	fp = fopen(path, "w");
+	if (fp == NULL)
+		return FALSE;
+
+	if (mxmlSaveFile(tree, fp, MXML_NO_CALLBACK) == -1) {
+		fclose(fp);
+		return FALSE;
+	}
 	fclose(fp);
 	mxmlDelete(tree);
 
@@ -989,7 +1026,7 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 		if (next_moves.len == -1)
 			return SCORE_ERROR;
 		moves_bonus = (scoring_player == current_player) ? 1 : -1;
-		moves_bonus *= next_moves.len;
+		moves_bonus *= (next_moves.len / 3);
 		free_list(&next_moves,free);
 	}
 
