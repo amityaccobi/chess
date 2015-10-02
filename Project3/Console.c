@@ -550,6 +550,8 @@ move user_turn(settings * game_settings, int was_checked) {
 				}
 				curr_move = curr_move->next;
 			}
+      if (best_moves.len != 0)
+        free_list(&best_moves, free);
 		}
 		// parse: get_score d m
 		else if (is_command_with_args(GET_SCORE)){

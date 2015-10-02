@@ -637,7 +637,7 @@ moves cords_to_moves(cord start_cord, cord end_cords[32], char board[BOARD_SIZE]
 		move_from_to(new_move->board, start_cord, end_cord);
 		// check if psaudo-legal move is legal
 		if (is_king_checked(color, new_move->board)){
-			//	free(new_move);
+			free(new_move);
 			continue;
 		}
 		else if (!add_node(&new_moves, new_move, sizeof(move))){
