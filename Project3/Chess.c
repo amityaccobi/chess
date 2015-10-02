@@ -290,24 +290,25 @@ int save_game(char * path, settings * game_settings) {
 
 	tree = mxmlNewXML("1.0");
 	game_node = mxmlNewElement(tree, "game");
-
+	if (!mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next)))
+		return FALSE;
 	if (!tree || !game_node) 
 		return FALSE;
 	if (!mxmlNewInteger(mxmlNewElement(game_node, "game_mode"), game_settings->mode))
 		return FALSE;
-	if (!mxmlNewOpaque(mxmlNewElement(game_node, "user_color"),color))
-			return FALSE;
-	if (!mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next)))
-		return FALSE;
-	if (game_settings->mode == PLAYER_VS_PLAYER)
+	if (game_settings->mode == PLAYER_VS_PLAYER) {
 		if (!mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), ""))
 			return FALSE;
-	else if (game_settings->minimax_depth == BEST_DIFFICULTY)
+	}
+	else if (game_settings->minimax_depth == BEST_DIFFICULTY) {
 		if (!mxmlNewOpaque(mxmlNewElement(game_node, "difficulty"), "best"))
 			return FALSE;
-	else if (!mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth))
+	}
+	else if (!mxmlNewInteger(mxmlNewElement(game_node, "difficulty"), game_settings->minimax_depth)) {
 		return FALSE;
-
+	}
+	if (!mxmlNewOpaque(mxmlNewElement(game_node, "user_color"), color))
+		return FALSE;
 	board_node = mxmlNewElement(game_node, "board");
 
 	for (int y = 8; y > 0; y--) {

@@ -236,15 +236,16 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 							return MAIN_WINDOW;
 						}
 						switch (clicked_mode_button){
-						case(1) :
+						case(PLAYER_VS_PLAYER) :
 							default_settings->mode = PLAYER_VS_PLAYER;
 							break;
-						case(2) :
+						case(PLAYER_VS_COMP) :
 							default_settings->mode = PLAYER_VS_COMP;
 							break;
 						default:
 							break;
 						}
+						display_check = FALSE;
 						return SETTINGS_WINDOW;
 						break;
 					}
@@ -1551,6 +1552,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 	// comp turn
 	if ((game_settings->mode == PLAYER_VS_COMP) && (game_settings->color != game_settings->next) && (!game_over)){
 		player_move = computer_turn(game_settings);
+		display_check = TRUE;
 		if (player_move.promotion == -1)
 			return FALSE;
 		if (!game_over){
@@ -1829,7 +1831,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			//click on side control
 			else if (is_inside_gui_tree_node(main_menu_button, event.button.x, event.button.y)){
 				game_over = FALSE;
-				return MAIN_WINDOW;
+				return MAIN_WINDOW; //TODO
 			}
 			//checking if there was a cilck on castling arrows
 			else if ((is_inside_gui_tree_node(game_panel->parent, event.button.x, event.button.y)) && is_castling_now){
@@ -1925,7 +1927,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						return FALSE;
 					}
 					if (clicked_diff_change_button == 0){
-						return SETTINGS_WINDOW;
+						return GAME_WINDOW;
 						break;
 					}
 					switch (clicked_diff_change_button){
