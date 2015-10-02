@@ -572,9 +572,10 @@ moves pawn_moves(settings * set, cord curr, int color) {
 					free_list(&piece_simple_moves, &free);
 					return error_moves;
 				}
-				free(single_move);
+				
 			}
 		}
+		free(single_move);
 	}
 	return piece_simple_moves;
 }
