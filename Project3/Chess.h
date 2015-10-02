@@ -178,5 +178,6 @@ move get_castling_move(settings * set, cord curr, int color);
 void check_castling_conditions(settings * game_settings);
 move get_best_move(settings * game_settings);
 cord find_piece(char piece, char board[BOARD_SIZE][BOARD_SIZE]);
+int which_color(char piece);
 
 #endif
