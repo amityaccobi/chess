@@ -275,7 +275,7 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 					return MAIN_WINDOW;
 				}
 				else{
-					sprintf(slot, "save%d.xml", clicked_button - 1);
+					sprintf(slot, "saved_games/slot%d.xml", clicked_button - 1);
 					if (load_game(slot, default_settings)){
 						int clicked_mode_button = create_dialog(default_settings, 2,
 							200, 75, 0, 325, GUI_SET);
@@ -1193,7 +1193,7 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		i = j;
 		if (special_dialog>1){
 			//check if button should be active or not
-			sprintf(slot, "save%d.xml", i);
+			sprintf(slot, "saved_games/slot%d.xml", i);
 			special_dialog_active = (load_game(slot, &tmp_settings)) ? 203 : 0;
 			different_control = FALSE;
 		}
@@ -1229,14 +1229,14 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	// chekc that if an 'empty slot' is clicked -> nothing will happend
 	if (special_dialog == GUI_LOAD){
-		sprintf(slot, "save%d.xml", selected_slot - 1);
+		sprintf(slot, "saved_games/slot%d.xml", selected_slot - 1);
 		while ((selected_slot >= 1)){
 			if (!load_game(slot, &tmp_settings)) {
 				if (!create_popup(default_settings, 0, ERROR_LOADING))
 					selected_slot = -1;
 				selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel,
 					num_of_controls, special_dialog);
-				sprintf(slot, "save%d.xml", selected_slot - 1);
+				sprintf(slot, "saved_games/slot%d.xml", selected_slot - 1);
 
 			}
 			else
@@ -1966,7 +1966,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 					break;
 				}
 				else{ //one of the saving slots was clicked
-					sprintf(slot, "save%d.xml", clicked_button - 1);
+					sprintf(slot, "saved_games/slot%d.xml", clicked_button - 1);
 					if (save_game(slot, game_settings)){
 						return GAME_WINDOW;
 						break;

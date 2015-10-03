@@ -348,7 +348,7 @@ int save_game(char * path, settings * game_settings) {
 /*
 *	compute computer's next move and play.
 *	return move in case of success, in case of lose/tie - return LOSE_CODE / TIE_CODE.
-*	in case of an error - exit
+*	in case of an error - return error_move
 */
 move computer_turn(settings * game_settings) {
 	moves best_moves = best_next_moves(*game_settings, game_settings->next); //find next move
@@ -1021,16 +1021,26 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 	int is_scoring_checked = is_king_checked(current_player, set->board);
 	int is_other_checked = is_king_checked(other_player(current_player), set->board);
 	int moves_bonus; //bonus for best difficulty
+	moves next_moves;
 
-	moves_bonus = is_best;
-	if (moves_bonus) {
-		moves next_moves = make_all_moves(set);
+	if (is_best) {
+		next_moves = make_all_moves(set);
 		if (next_moves.len == -1)
 			return SCORE_ERROR;
-		moves_bonus = (scoring_player == current_player) ? 1 : -1;
-		moves_bonus *= (next_moves.len / 3);
-		free_list(&next_moves,free);
+		moves_bonus = next_moves.len;
+		set->next = other_player(set->next);
+		free_list(&next_moves, free);
+		next_moves = make_all_moves(set);
+		if (next_moves.len == -1)
+			return SCORE_ERROR;
+		moves_bonus -= next_moves.len;
+		set->next = other_player(set->next);
+		moves_bonus /= 6;
+		moves_bonus *= (scoring_player == current_player) ? 1 : -1;
+		free_list(&next_moves, free);
 	}
+	else
+		moves_bonus = 0; // bonus only in BEST difficulty
 
 	for (int i = 0; i < BOARD_SIZE; i++){
 		for (int j = 0; j < BOARD_SIZE; j++){
