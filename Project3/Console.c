@@ -317,7 +317,13 @@ move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]){
 	cord_ptr = strchr(cord_ptr + 1, '<');
 	// parse end coordinate of move
 	new_move.end = parse_cord(cord_ptr);
-	new_move.promotion = (strchr(cord_ptr + 1, ' ') != NULL);
+	if ((strchr(cord_ptr + 1, ' ') != NULL) ||
+		(is_valid_cord(new_move.start) &&
+			(tolower(board_piece(board, new_move.start) == PAWN)) &&
+			(promotion_row(which_color(board_piece(board, new_move.start))) == new_move.end.y)))
+		new_move.promotion = 1;
+	else
+		new_move.promotion = 0;
 	board_copy(board, new_move.board);
 	move_from_to(new_move.board, new_move.start, new_move.end);
 	return new_move;
@@ -372,10 +378,10 @@ char piece_from_string(char * piece_char, int color) {
 		piece = KNIGHT;
 	else if (strstr("rook", piece_char) != NULL)
 		piece = ROOK;
-	else if (strstr("queen", piece_char) != NULL)
-		piece = QUEEN;
-	else
+	else if (strstr("king", piece_char) != NULL)
 		piece = KING;
+	else
+		piece = QUEEN;
 	piece = (color == WHITE) ? piece : toupper(piece);
 	return piece;
 }
@@ -456,7 +462,7 @@ move user_turn(settings * game_settings, int was_checked) {
 			move_from_to(temp_move.board, temp_move.start, temp_move.end);
 			if (temp_move.promotion) {
 				cord_ptr = strrchr(input, ' ') + 1;
-				board_piece(temp_move.board, temp_move.end) = piece_from_string(cord_ptr, game_settings->next);
+				board_piece(temp_move.board, temp_move.end) = piece_from_string(cord_ptr + 1, game_settings->next);
 			}
 			// check if move is valid. if so, get its index in possible_moves
 			int valid_move = is_valid_move(possible_moves, temp_move);
@@ -558,6 +564,29 @@ move user_turn(settings * game_settings, int was_checked) {
 			temp_move = parse_move(input, game_settings->board);
 			board_copy(temp_move.board, temp_settings.board);
 			temp_settings.next = other_player(game_settings->next);
+			// check if coordinates are valid
+			if (!is_valid_cord(temp_move.start) || !is_valid_cord(temp_move.end)) {
+				print_message(WRONG_POSITION);
+				continue;
+			}
+			//check if starting cord contains player's piece
+			if (which_color(board_piece(game_settings->board, temp_move.start)) != game_settings->next) {
+				print_message(NO_DICS);
+				continue;
+			}
+			board_copy(game_settings->board, temp_move.board);
+			move_from_to(temp_move.board, temp_move.start, temp_move.end);
+			if (temp_move.promotion) {
+				cord_ptr = strrchr(input, ' ') +1 ;
+				board_piece(temp_move.board, temp_move.end) = piece_from_string(cord_ptr+1, game_settings->next);
+			}
+			// check if move is valid. if so, get its index in possible_moves
+			int valid_move = is_valid_move(possible_moves, temp_move);
+			if (valid_move == -1) {
+				print_message(ILLEGAL_MOVE);
+				continue;
+			}
+			board_copy(temp_move.board, temp_settings.board);
 			if (depth != 0) 
 				move_score = (int) minimax(temp_settings, INT_MIN, INT_MAX, FALSE, depth - 1, FALSE, TRUE);
 			else // depth == 0 if best [since: atoi("best") = 0]
@@ -565,7 +594,7 @@ move user_turn(settings * game_settings, int was_checked) {
 
 			if (move_score == SCORE_ERROR){
 				free_list(&possible_moves, free);
-				return error_move;;
+				return error_move;
 			}
 			printf("%d\n", move_score);
 		}
