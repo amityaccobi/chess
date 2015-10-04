@@ -1089,10 +1089,10 @@ int create_opening_popup(){
 	// set a delay of 1 sec
 	SDL_Delay(1500);
 	// remove the popup from the UI tree
-	node * popup_node = window->children.first = NULL;
+	node * popup_node = window->children.first;
 	window->children.first = NULL;
 	window->children.last = NULL;
-	free(popup_node);
+	free_tree(popup_node->data);
 	window->children.len = 0;
 
 	// re-draw the tree
@@ -1801,9 +1801,11 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 							turn_protocol_panel, save_button, main_menu_button,	quit_button, board_tools,
 							get_best_move_button, &all_possible_moves, to_move, &moves_for_piece, piece_cord);
 
-						if (all_possible_moves.len > 0){
+						if (all_possible_moves.len > 0)
 							free_list(&all_possible_moves, free);
-						}
+						if (moves_for_piece.len > 0)
+							free_list(&moves_for_piece, free);
+
 						return next_window;
 					}
 
@@ -1898,7 +1900,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			else if (is_inside_gui_tree_node(main_menu_button, event.button.x, event.button.y)){
 				game_over = FALSE;
 				free_list(&all_possible_moves, free);
-				return MAIN_WINDOW; //TODO
+				return MAIN_WINDOW;
 			}
 			//checking if there was a cilck on castling arrows
 			else if ((is_inside_gui_tree_node(game_panel->parent, event.button.x, event.button.y)) && is_castling_now){
@@ -1951,7 +1953,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				game_settings->is_next_checked = is_king_checked(other_player(game_settings->next), game_settings->board);
 				game_settings->next = other_player(game_settings->next);
 				is_castling_now = FALSE;
-
+				free_list(&all_possible_moves, free);
 				return GAME_WINDOW;
 			}
 			//click on save control
@@ -1959,22 +1961,27 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				//clicked_button can return: 0 = cancel was clicked, [1...] = the [i+1....]th save\load slots 
 				int clicked_button = create_dialog(game_settings, NUM_OF_MEMORY_SLOTS, 200, 50, 600, 1200, GUI_SAVE);
 				if (clicked_button == -1){// error occured
+					free_list(&all_possible_moves, free);
 					return FALSE;
 				}
 				if (clicked_button == 0){// cancel button was clicked
+					free_list(&all_possible_moves, free);
 					return GAME_WINDOW;
 					break;
 				}
 				else{ //one of the saving slots was clicked
 					sprintf(slot, "saved_games/slot%d.xml", clicked_button - 1);
 					if (save_game(slot, game_settings)){
+						free_list(&all_possible_moves, free);
 						return GAME_WINDOW;
 						break;
 					}
 					else{
-						if (!create_popup(game_settings, 0, ERROR_SAVING))
+						if (!create_popup(game_settings, 0, ERROR_SAVING)){
+							free_list(&all_possible_moves, free);
 							return FALSE;
-						continue; //TODO;
+						}						
+						continue;
 					}
 				}
 			}
@@ -1984,6 +1991,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				move_node *node = NULL;
 				node = (move_node*)malloc(sizeof(move_node));
 				if (node == NULL){
+					free_list(&all_possible_moves, free);
 					return FALSE;
 				}
 				if (game_settings->mode == PLAYER_VS_PLAYER){
@@ -1991,9 +1999,11 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						50, 50, 0, 4042, GUI_SET);
 					// error occured
 					if (clicked_diff_change_button == -1){
+						free_list(&all_possible_moves, free);
 						return FALSE;
 					}
 					if (clicked_diff_change_button == 0){
+						free_list(&all_possible_moves, free);
 						return GAME_WINDOW;
 						break;
 					}
@@ -2024,6 +2034,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 				best_moves.last = node;
 				best_moves.len = 1;
 				if (!user_turn_mark_possible_moves(game_settings, game_panel, board_tools, error_cord, best_moves, TRUE)){
+					free_list(&all_possible_moves, free);
 					free(node);
 					return FALSE;
 				}
@@ -2032,12 +2043,14 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			}
 			else if (is_inside_gui_tree_node(quit_button, event.button.x, event.button.y)){
 				int next_window = create_quit_dialog(game_settings, GAME_WINDOW);
+				free_list(&all_possible_moves, free);
 				return next_window;
 			}
 		default:
 			break;
 		}
 	}
+	free_list(&all_possible_moves, free);
 	return FALSE;
 }
 

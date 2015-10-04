@@ -458,7 +458,6 @@ move user_turn(settings * game_settings, int was_checked) {
 				cord_ptr = strrchr(input, ' ') + 1;
 				board_piece(temp_move.board, temp_move.end) = piece_from_string(cord_ptr, game_settings->next);
 			}
-			else temp_move.promotion = 0;
 			// check if move is valid. if so, get its index in possible_moves
 			int valid_move = is_valid_move(possible_moves, temp_move);
 			if (valid_move == -1) {
