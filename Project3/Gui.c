@@ -52,7 +52,7 @@ int gui_mode(){
 		exit(0);
 	}
 
-	popup_img = SDL_LoadBMP("sprites/popup2.bmp");
+	popup_img = SDL_LoadBMP("sprites/popup.bmp");
 	if (popup_img == NULL){
 		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		SDL_FreeSurface(buttons1_img);
@@ -69,7 +69,7 @@ int gui_mode(){
 		SDL_FreeSurface(popup_img);
 		exit(0);
 	}
-	tools_img = SDL_LoadBMP("sprites/tools2.bmp");
+	tools_img = SDL_LoadBMP("sprites/tools.bmp");
 	if (tools_img == NULL){
 		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		SDL_FreeSurface(buttons1_img);
@@ -206,7 +206,7 @@ int create_main_window(settings *default_settings){
 	}
 	quit_button = panel->children.last->data;
 
-	SDL_WM_SetCaption("!Chessky, The Game Of Kings!", NULL);
+	SDL_WM_SetCaption("!CHESSKY. The Game Of Kings!", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
 		window = NULL;
@@ -359,7 +359,7 @@ int create_player_selection_window(settings *default_settings){
 		return FALSE;
 	}
 	cancel_button = panel->children.last->data;
-	SDL_WM_SetCaption("Player Selection", NULL);
+	SDL_WM_SetCaption("Game Mode", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
 		window = NULL;
@@ -501,7 +501,7 @@ int create_settings_window(settings *default_settings){
 		return FALSE;
 	}
 	cancel_button = panel->children.last->data;
-	SDL_WM_SetCaption("Settings Window", NULL);
+	SDL_WM_SetCaption("Settings", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
 		window = NULL;
@@ -737,7 +737,7 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 		window = NULL;
 		return FALSE;
 	}
-	SDL_WM_SetCaption("Set Board Window", NULL);
+	SDL_WM_SetCaption("Set Board", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
 		window = NULL;
@@ -801,7 +801,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 					return FALSE;
 				}
-				SDL_WM_SetCaption("Set Board Window", NULL);
+				SDL_WM_SetCaption("Set Board", NULL);
 				if (!draw_tree(window)){
 					return FALSE;
 				}
@@ -856,7 +856,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 							if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 								return FALSE;
 							}
-							SDL_WM_SetCaption("Set Board Window", NULL);
+							SDL_WM_SetCaption("Set Board", NULL);
 							if (!draw_tree(window)){
 								return FALSE;
 							}
@@ -899,7 +899,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 				if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 					return FALSE;
 				}
-				SDL_WM_SetCaption("Set Board Window", NULL);
+				SDL_WM_SetCaption("Set Board", NULL);
 				if (!draw_tree(window)){
 					return FALSE;
 				}
@@ -980,7 +980,7 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 						if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
 							return FALSE;
 						}
-						SDL_WM_SetCaption("Set Board Window", NULL);
+						SDL_WM_SetCaption("Set Board", NULL);
 						if (!draw_tree(window)){
 							return FALSE;
 						}
@@ -1087,7 +1087,7 @@ int create_opening_popup(){
 		return FALSE;
 	}
 	// set a delay of 1 sec
-	SDL_Delay(2500);
+	SDL_Delay(1500);
 	// remove the popup from the UI tree
 	node * popup_node = window->children.first = NULL;
 	window->children.first = NULL;
@@ -1407,7 +1407,7 @@ int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_
 		window = NULL;
 		return FALSE;
 	}
-	SDL_WM_SetCaption("Game Window", NULL);
+	SDL_WM_SetCaption("CHESSKY.", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
 		window = NULL;
@@ -1972,7 +1972,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 						break;
 					}
 					else{
-						if (!create_popup(game_settings, 0, ERROR_LOADING))
+						if (!create_popup(game_settings, 0, ERROR_SAVING))
 							return FALSE;
 						continue; //TODO;
 					}

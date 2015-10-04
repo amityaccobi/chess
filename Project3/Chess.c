@@ -292,7 +292,7 @@ int save_game(char * path, settings * game_settings) {
 	game_node = mxmlNewElement(tree, "game");
 	if (!mxmlNewOpaque(mxmlNewElement(game_node, "next_turn"), color_string(game_settings->next)))
 		return FALSE;
-	if (!tree || !game_node) 
+	if (!tree || !game_node)
 		return FALSE;
 	if (!mxmlNewInteger(mxmlNewElement(game_node, "game_mode"), game_settings->mode))
 		return FALSE;
@@ -323,10 +323,13 @@ int save_game(char * path, settings * game_settings) {
 	}
 
 	fp = fopen(path, "w");
-	if (fp == NULL)
+	if (fp == NULL) {
+		mxmlDelete(tree);
 		return FALSE;
+	}
 
 	if (mxmlSaveFile(tree, fp, MXML_NO_CALLBACK) == -1) {
+		mxmlDelete(tree);
 		fclose(fp);
 		return FALSE;
 	}

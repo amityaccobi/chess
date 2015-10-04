@@ -27,6 +27,7 @@
 #define INVALID_SET_MESSAGE 400
 #define TIE_MESSAGE 600
 #define ERROR_LOADING 800
+#define ERROR_SAVING 1000
 
 #define GUI_SAVE 3
 #define GUI_LOAD 2
