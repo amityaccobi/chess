@@ -39,14 +39,10 @@
 int gui_mode();
 int create_opening_popup();
 int create_main_window(settings *default_settings);
-int create_load_save_window(settings *default_settings, int is_save);
 int create_settings_window(settings *default_settings);
 int listener_to_Settings_window(settings *default_settings, gui_tree_node *diff_change_button,
 	gui_tree_node *ok_button, gui_tree_node *cancel_button, gui_tree_node *next_player_change_button,
 	gui_tree_node *color_change_button, gui_tree_node *set_board_button);
-int create_player_selection_window(settings *default_settings);
-int listener_to_player_selection_window(settings *default_settings, gui_tree_node *player_vs_player_button,
-	gui_tree_node *player_vs_comp_button, gui_tree_node *cancel_button);
 int create_main_window();
 int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_button, gui_tree_node *load_game_button, gui_tree_node *quit_button);
 int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_settings,
@@ -57,12 +53,8 @@ int draw_board(settings *game_settings, gui_tree_node *panel,
 int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel, gui_tree_node *turn_protocol_panel, gui_tree_node *save_button,
 	gui_tree_node *main_menu_button, gui_tree_node *quit_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
 	gui_tree_node *get_best_move_button, moves *all_piece_possible_moves, int to_move, moves *moves_of_piece, cord marked_cord);
-
 int mark_all_possible_moves(moves possible_moves, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
 	settings *game_settings, gui_tree_node *panel);
-int game_flow(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel, gui_tree_node *save_button,
-	gui_tree_node *main_menu_button, gui_tree_node *quit_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
-	moves all_possible_moves);
 int create_game_window(settings *game_settings, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE]);
 void set_square_selected(gui_tree_node *board_tools);
 void get_player_next_moves(gui_tree_node *board_tools);

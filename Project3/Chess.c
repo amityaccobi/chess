@@ -200,9 +200,6 @@ int is_valid_move(moves all_valid_moves, move new_move){
 	cord end = new_move.end;
 	for (unsigned i = 0; i < all_valid_moves.len; i++){
 		curr_move = curr_node->data;
-		if (DEBUG && curr_move->promotion) {
-			printf("MY PROMOTION: %c Vs. THEIR PRO: %c\n", board_piece(curr_move->board, end), board_piece(new_move.board, end));
-		}
 		if ((is_same_cord(curr_move->start, start)) &&
 			(is_same_cord(curr_move->end, end)) &&
 			(board_piece(curr_move->board, end) == board_piece(new_move.board, end))) //it's the same promotion
@@ -876,14 +873,6 @@ moves best_next_moves(settings set, int maximizer) {
 		memcpy(&next_set, &set, sizeof(settings));
 		next_set.next = other_player(set.next);
 		board_copy(((move*)curr->data)->board, next_set.board);
-
-
-		if (DEBUG){
-		printf("\t\t");
-		print_move((move*)curr->data);
-		}
-
-
 		check_castling_conditions(&next_set);
 		curr_score = minimax(next_set, curr_alpha, INT_MAX, FALSE, depth - 1, is_best_difficulty, FALSE);
 		if (curr_score == SCORE_ERROR) {
@@ -929,8 +918,10 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 		int scorrer = is_maxi_player ? player : other_player(player);
 		double board_score = score(&set, scorrer, player, is_best_difficulty); //return score according to maximizing player
 		if (DEBUG) {
+			if (board_score < -100) {
 			print_board(set.board);
 			printf("CURRSCOR: %lf\n", board_score);
+			}
 		}
 		return board_score;
 
@@ -1103,11 +1094,6 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 	// other player's king is pushing up the daisies
 	else if (no_other_king)
 		total_score = WIN_SCORE;
-
-	//RELEVANT ONLY FOR best DIFFICULTY!
-	else if (is_best && is_scoring_checked)
-		return LOSE_SCORE + 42;
-
 	// both players' kings are alive and pining for the fjords
 	else
 		total_score = player_score - other_player_score + moves_bonus;

@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <time.h> //for srand()
 
-#define DEBUG FALSE
+#define DEBUG TRUE
 
 /*****************/
 /****CONTSANTS****/
