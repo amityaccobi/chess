@@ -8,6 +8,6 @@ int main(int argc, char * argv[]) {
 	else if (strcmp(argv[1], "gui") == 0)
 		return gui_mode();
 	else
-		printf("Invalid arguments. Please run with \"consol\", \"gui\" or none\n");
+		printf("Invalid arguments. Please run with \"console\", \"gui\" or none\n");
 	return 0;
 }
