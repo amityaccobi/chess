@@ -96,7 +96,7 @@ int print_board(char board[BOARD_SIZE][BOARD_SIZE])
 	}
 	for (j = BOARD_SIZE - 1; j >= 0; j--)
 	{
-		if (printf((j < 9 ? "%d" : "%d"), j + 1) < 0) {
+		if (printf("%d", j + 1) < 0) {
 			perror_message("printf");
 			return -1;
 		}
