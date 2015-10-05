@@ -143,7 +143,7 @@ int print_board(char board[BOARD_SIZE][BOARD_SIZE])
 */
 settings settings_state() {
 	int depth = 1;
-	int mode = 2;
+	int mode = 1;
 	int next = WHITE;
 	int user_color = WHITE;
 	char input[51];
@@ -193,10 +193,22 @@ settings settings_state() {
 		else if is_command_with_args(SET_SETTING) {
 			new_cord = parse_cord(args);
 			if (is_valid_cord(new_cord)) {
+				int color;
 				char tmp_piece = game_settings.board[new_cord.x][new_cord.y];
 				char * piece_type = strrchr(input, ' ') + 1;
-				int color = (strstr(input, "white") != NULL) ? WHITE : BLACK;
+				if (strstr(input, "white") != NULL)
+					color = WHITE;
+				else if (strstr(input, "black") != NULL)
+					color = BLACK;
+				else{
+					print_message(ILLEGAL_COMMAND);
+					continue;
+				}
 				char piece_to_add = piece_from_string(piece_type, color);
+				if ((tolower(piece_to_add) == QUEEN) && (strstr(input, "queen") == NULL)) {
+					print_message(ILLEGAL_COMMAND);
+					continue;
+				}
 				board_piece(game_settings.board, new_cord) = piece_to_add;
 				if (is_over_max(game_settings.board, new_cord)){
 					print_message(NO_PIECE);
@@ -208,7 +220,7 @@ settings settings_state() {
 				print_message(WRONG_POSITION);
 		}
 		// parse: difficulty d
-		else if ((is_command_with_args(DIFFICULTY)) && (game_settings.mode == PLAYER_VS_COMP)) {
+			else if ((is_command_with_args(DIFFICULTY)) && (game_settings.mode == PLAYER_VS_COMP)) {
 			if (strcmp(args, BEST) == 0)
 				depth = 0;
 			else if (strstr(input, DEPTH)) {
@@ -217,6 +229,8 @@ settings settings_state() {
 					print_message(WRONG_MINIMAX_DEPTH);
 				}
 			}
+			else
+				print_message(ILLEGAL_COMMAND);
 			game_settings.minimax_depth = depth;
 		}
 		// parse: user_color color
@@ -225,6 +239,8 @@ settings settings_state() {
 				game_settings.color = WHITE;
 			else if (strstr(input, "black") != NULL)
 				game_settings.color = BLACK;
+			else
+				print_message(ILLEGAL_COMMAND);
 		}
 		// parse : next_player a
 		else if (is_command_with_args(NEXT_PLAYER)) {
@@ -232,6 +248,8 @@ settings settings_state() {
 				game_settings.next = WHITE;
 			else if (strstr(input, "black") != NULL)
 				game_settings.next = BLACK;
+			else
+				print_message(ILLEGAL_COMMAND);
 		}
 		// parse: load x
 		else if is_command_with_args(LOAD) {
@@ -319,7 +337,7 @@ move parse_move(char * movestr, char board[BOARD_SIZE][BOARD_SIZE]){
 	new_move.end = parse_cord(cord_ptr);
 	if ((strchr(cord_ptr + 1, ' ') != NULL) ||
 		(is_valid_cord(new_move.start) &&
-			(tolower(board_piece(board, new_move.start) == PAWN)) &&
+			(tolower(board_piece(board, new_move.start)) == PAWN) &&
 			(promotion_row(which_color(board_piece(board, new_move.start))) == new_move.end.y)))
 		new_move.promotion = 1;
 	else
@@ -447,7 +465,7 @@ move user_turn(settings * game_settings, int was_checked) {
 
 		// parse: move <x,y> to <i,j> [promotion]
 		if (is_command_with_args(MOVE)){
-			temp_move = parse_move(input, game_settings->board);
+				temp_move = parse_move(input, game_settings->board);
 			// check if coordinates are valid
 			if (!is_valid_cord(temp_move.start) || !is_valid_cord(temp_move.end)) {
 				print_message(WRONG_POSITION);

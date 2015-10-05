@@ -943,7 +943,7 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 		if (is_king_checked(player, set.board))
 			return is_maxi_player ? INT_MIN : INT_MAX;
 		else // tie
-			return TIE_SCORE;
+			return is_best_difficulty ? 0: TIE_SCORE;
 	}
 	minimax_score = is_maxi_player ? INT_MIN : INT_MAX;
 	curr = possible_moves.first;
