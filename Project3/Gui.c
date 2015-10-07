@@ -14,6 +14,7 @@ gui_tree_node* window = NULL;
 SDL_Surface* buttons1_img = NULL;
 SDL_Surface* buttons2_img = NULL;
 SDL_Surface* buttons3_img = NULL;
+SDL_Surface* buttons4_img = NULL;
 SDL_Surface* popup_img = NULL;
 SDL_Surface* opening_img = NULL;
 SDL_Surface* tools_img = NULL;
@@ -52,12 +53,22 @@ int gui_mode(){
 		exit(0);
 	}
 
+	buttons4_img = SDL_LoadBMP("sprites/buttons4.bmp");
+	if (buttons4_img == NULL) {
+		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
+		SDL_FreeSurface(buttons1_img);
+		SDL_FreeSurface(buttons2_img);
+		SDL_FreeSurface(buttons3_img);
+		exit(0);
+	}
+
 	popup_img = SDL_LoadBMP("sprites/popup.bmp");
 	if (popup_img == NULL){
 		fprintf(stderr, "could not load image: %s\n", SDL_GetError());
 		SDL_FreeSurface(buttons1_img);
 		SDL_FreeSurface(buttons2_img);
 		SDL_FreeSurface(buttons3_img);
+		SDL_FreeSurface(buttons4_img);
 		exit(0);
 	}
 	opening_img = SDL_LoadBMP("sprites/opening.bmp");
@@ -66,6 +77,7 @@ int gui_mode(){
 		SDL_FreeSurface(buttons1_img);
 		SDL_FreeSurface(buttons2_img);
 		SDL_FreeSurface(buttons3_img);
+		SDL_FreeSurface(buttons4_img);
 		SDL_FreeSurface(popup_img);
 		exit(0);
 	}
@@ -75,6 +87,7 @@ int gui_mode(){
 		SDL_FreeSurface(buttons1_img);
 		SDL_FreeSurface(buttons2_img);
 		SDL_FreeSurface(buttons3_img);
+		SDL_FreeSurface(buttons4_img);
 		SDL_FreeSurface(popup_img);
 		SDL_FreeSurface(opening_img);
 		exit(0);
@@ -85,6 +98,7 @@ int gui_mode(){
 		SDL_FreeSurface(buttons1_img);
 		SDL_FreeSurface(buttons2_img);
 		SDL_FreeSurface(buttons3_img);
+		SDL_FreeSurface(buttons4_img);
 		SDL_FreeSurface(popup_img);
 		SDL_FreeSurface(opening_img);
 		SDL_FreeSurface(tools_img);
@@ -96,6 +110,7 @@ int gui_mode(){
 		SDL_FreeSurface(buttons1_img);
 		SDL_FreeSurface(buttons2_img);
 		SDL_FreeSurface(buttons3_img);
+		SDL_FreeSurface(buttons4_img);
 		SDL_FreeSurface(popup_img);
 		SDL_FreeSurface(opening_img);
 		SDL_FreeSurface(tools_img);
@@ -111,12 +126,15 @@ int gui_mode(){
 		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
 		exit(0);
 	}
-	cur_window = create_main_window(&game_settings);
+	cur_window = create_main_window(&game_settings, FALSE);
 	while ((cur_window != QUIT_PROGRAM) && (cur_window != FALSE)){
 		switch (cur_window){
 		case (MAIN_WINDOW) :
 			reset_game(&game_settings);
-			cur_window = create_main_window(&game_settings);
+			cur_window = create_main_window(&game_settings,FALSE);
+			break;
+		case (PLAYER_SELECTION_WINDOW) :
+			cur_window = create_main_window(&game_settings, TRUE);
 			break;
 		case (SETTINGS_WINDOW) :
 			cur_window = create_settings_window(&game_settings);
@@ -137,6 +155,7 @@ int gui_mode(){
 	SDL_FreeSurface(buttons1_img);
 	SDL_FreeSurface(buttons2_img);
 	SDL_FreeSurface(buttons3_img);
+	SDL_FreeSurface(buttons4_img);
 	SDL_FreeSurface(opening_img);
 	SDL_FreeSurface(tools_img);
 	SDL_FreeSurface(popup_img);
@@ -147,8 +166,9 @@ int gui_mode(){
 
 
 // create the Main window
-int create_main_window(settings *default_settings){
+int create_main_window(settings *default_settings, int popup){
 	gui_tree_node *panel, *new_game_button, *load_game_button, *quit_button, *last_window;
+	if (!popup) {
 	default_settings->black_king_moved = 0;
 	default_settings->black_rook_1_moved = 0;
 	default_settings->black_rook_2_moved = 0;
@@ -159,7 +179,7 @@ int create_main_window(settings *default_settings){
 	default_settings->white_king_moved = 0;
 	default_settings->white_rook_1_moved = 0;
 	default_settings->white_rook_2_moved = 0;
-
+	}
 
 	last_window = window;
 	// create the UI tree (all the controls) in the window
@@ -220,6 +240,22 @@ int create_main_window(settings *default_settings){
 		return FALSE;
 	}
 	free_tree(last_window);
+	if (popup) {
+		int clicked_mode_button = create_dialog(default_settings, 5,
+			200, 75, 0, 325, GUI_START);
+		// error occured
+		if (clicked_mode_button == -1) {
+			if (!create_popup(default_settings, 0, ERROR_LOADING)) {
+				return FALSE;
+			}
+			return FALSE;
+		}
+		if (clicked_mode_button == 0)
+			return MAIN_WINDOW;
+		display_check = FALSE;
+
+		return clicked_mode_button;
+	}
 	return listener_to_main_window(default_settings, new_game_button, load_game_button, quit_button);
 }
 
@@ -237,35 +273,27 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 		case (SDL_MOUSEBUTTONUP) :
 			// click on new_game_button
 			if (is_inside_gui_tree_node(new_game_button, eventt.button.x, eventt.button.y)) {
-				int clicked_mode_button = create_dialog(default_settings, 2,
-					200, 75, 0, 325, GUI_SET);
+				int clicked_mode_button = create_dialog(default_settings, 5,
+					200, 75, 0, 325, GUI_START);
 				// error occured
-				if (clicked_mode_button == -1){
+				if (clicked_mode_button == -1) {
+					if (!create_popup(default_settings, 0, ERROR_LOADING)) {
+						return FALSE;
+					}
 					return FALSE;
 				}
-				if (clicked_mode_button == 0){
+				if (clicked_mode_button == 0)
 					return MAIN_WINDOW;
-					break;
-				}
-				switch (clicked_mode_button){
-				case(1) :
-					default_settings->mode = PLAYER_VS_PLAYER;
-					break;
-				case(2) :
-					default_settings->mode = PLAYER_VS_COMP;
-					break;
-				default:
-					break;
-				}
-				return SETTINGS_WINDOW;
+				display_check = FALSE;
 
+				return clicked_mode_button;
 			}
 			// click on load_game_button
 			else if (is_inside_gui_tree_node(load_game_button, eventt.button.x, eventt.button.y)) {
 				
 				//clicked_button can return: 0 = cancel was clicked, [1...] = the [i+1....]th save\load slots 
 				int clicked_button = create_dialog(default_settings, NUM_OF_MEMORY_SLOTS,
-					200, 50, 0, 1200, GUI_LOAD);
+					200, 50, 0, 1425, GUI_LOAD);
 				// error occured
 				
 				if (clicked_button == -1){
@@ -277,8 +305,8 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 				else{
 					sprintf(slot, "saved_games/slot%d.xml", clicked_button - 1);
 					if (load_game(slot, default_settings)){
-						int clicked_mode_button = create_dialog(default_settings, 2,
-							200, 75, 0, 325, GUI_SET);
+						int clicked_mode_button = create_dialog(default_settings, 5,
+							200, 75, 0, 325, GUI_START);
 						// error occured
 						if (clicked_mode_button == -1){
 							if (!create_popup(default_settings, 0, ERROR_LOADING)){
@@ -286,25 +314,11 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 							}
 							return FALSE;
 						}
-						if (clicked_mode_button == 0){
+						if (clicked_mode_button == 0)
 							return MAIN_WINDOW;
-						}
-						switch (clicked_mode_button){
-						case(PLAYER_VS_PLAYER) :
-							default_settings->mode = PLAYER_VS_PLAYER;
-							break;
-						case(PLAYER_VS_COMP) :
-							default_settings->mode = PLAYER_VS_COMP;
-							break;
-						default:
-							break;
-						}
 						display_check = FALSE;
-						return SETTINGS_WINDOW;
-						break;
-					}
-					else{
 
+						return clicked_mode_button;
 					}
 				}
 			}
@@ -322,13 +336,12 @@ int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_
 
 // create the "Settings" window
 int create_settings_window(settings *default_settings){
-	gui_tree_node *panel, *next_player_button,
-		*cancel_button, *ok_button, *set_board_button, *last_window;
+	gui_tree_node *panel, *cancel_button, *ok_button, *last_window;
 	gui_tree_node *color_button = NULL;
 	gui_tree_node *diff_button = NULL;
 
 
-	int color, difficulty, next_player_color;
+	int color, difficulty;
 	last_window = window;
 	// create the UI tree (all the controls) in the window
 	window = create_window(800, 600);
@@ -341,78 +354,56 @@ int create_settings_window(settings *default_settings){
 	}
 	panel = window->children.last->data;
 	//create the window header ("setting window")
-	if (!create_image(0, 650, 250, 0, 300, 100, buttons1_img, panel)){
+	if (!create_image(0, 875, 250, 0, 300, 100, buttons1_img, panel)){
 		free_tree(last_window);
 		window = NULL;
 		return FALSE;
 	}
-	if (default_settings->mode == PLAYER_VS_COMP){
 		//creating the label "user color"
-		if (!create_image(0, 1072, 300, 200, 200, 50, buttons1_img, panel)){
+		if (!create_image(0, 1297, 300, 200, 200, 50, buttons1_img, panel)){
 			free_tree(last_window);
 			window = NULL;
 			return FALSE;
 		}
 		color = default_settings->color;
 		//create the color change button
-		if (!create_button(0, 750 + (50 * color), 350, 250, 100, 50, buttons1_img, panel)){
+		if (!create_button(0, 975 + (50 * color), 350, 250, 100, 50, buttons1_img, panel)){
 			free_tree(last_window);
 			window = NULL;
 			return FALSE;
 		}
 		color_button = panel->children.last->data;
 		// create difficulty label
-		if (!create_image(0, 1023, 300, 300, 200, 50, buttons1_img, panel)){
+		if (!create_image(0, 1248, 300, 300, 200, 50, buttons1_img, panel)){
 			free_tree(last_window);
 			window = NULL;
 			return FALSE;
 		}
 		difficulty = default_settings->minimax_depth;
 		// create difficulty button
-		if (!create_button(difficulty * 50, 973, 375, 350,
+		if (!create_button(difficulty * 50, 1198, 375, 350,
 			50, 50, buttons1_img, panel)){
 			free_tree(last_window);
 			window = NULL;
 			return FALSE;
 		}
 		diff_button = panel->children.last->data;
-	}
-	//create next_player label
-	if (!create_image(0, 1122, 300, 100, 200, 50, buttons1_img, panel)){
-		free_tree(last_window);
-		window = NULL;
-		return FALSE;
-	}
 
-	next_player_color = default_settings->next;
-	//create next player button
-	if (!create_button(0, 750 + (50 * next_player_color), 350, 150, 100, 50, buttons1_img, panel)){
-		free_tree(last_window);
-		window = NULL;
-		return FALSE;
-	}
-	next_player_button = panel->children.last->data;
-	//create "set board" button
-	if (!create_button(199, 899, 500, 500, 100, 75, buttons1_img, panel)){
-		free_tree(last_window);
-		window = NULL;
-		return FALSE;
-	}
-	set_board_button = panel->children.last->data;
-	//create ok button
-	if (!create_button(100, 899, 200, 500, 100, 75, buttons1_img, panel)){
-		free_tree(last_window);
-		window = NULL;
-		return FALSE;
-	}
-	ok_button = panel->children.last->data;
-	//create cancel button
-	if (!create_button(0, 899, 350, 500, 100, 75, buttons1_img, panel)){
+		//create cancel button
+	if (!create_button(200, 1124, 500, 500, 100, 75, buttons1_img, panel)){
 		free_tree(last_window);
 		window = NULL;
 		return FALSE;
 	}
 	cancel_button = panel->children.last->data;
+	//create ok button
+	if (!create_button(100, 1124, 200, 500, 100, 75, buttons1_img, panel)){
+		free_tree(last_window);
+		window = NULL;
+		return FALSE;
+	}
+	ok_button = panel->children.last->data;
+
 	SDL_WM_SetCaption("Settings", NULL);
 	if (!draw_tree(window)){
 		free_tree(last_window);
@@ -429,13 +420,13 @@ int create_settings_window(settings *default_settings){
 
 	free_tree(last_window);
 	return listener_to_Settings_window(default_settings, diff_button, ok_button,
-		cancel_button, next_player_button, color_button, set_board_button);
+		cancel_button, color_button);
 }
 
 // the listener for the player selection window controls
 int listener_to_Settings_window(settings *default_settings, gui_tree_node *diff_button,
-	gui_tree_node *ok_button, gui_tree_node *cancel_button, gui_tree_node *next_player_button,
-	gui_tree_node *color_button, gui_tree_node *set_board_button){
+	gui_tree_node *ok_button, gui_tree_node *cancel_button,
+	gui_tree_node *color_button){
 	SDL_Event eventt;
 	while (SDL_WaitEvent(&eventt)){
 		switch (eventt.type){
@@ -465,47 +456,15 @@ int listener_to_Settings_window(settings *default_settings, gui_tree_node *diff_
 				}
 				return SETTINGS_WINDOW;
 			}
-			// click on next_player_button
-			else if (is_inside_gui_tree_node(next_player_button, eventt.button.x, eventt.button.y)){
-				int clicked_next_change_button = create_dialog(default_settings, 2,
-					100, 50, 0, 3767, GUI_SET);
-				// error occured
-				if (clicked_next_change_button == -1){
-					return FALSE;
-				}
-				//click on cancel
-				if (clicked_next_change_button == 0){
-					return SETTINGS_WINDOW;
-					break;
-				}
-				switch (clicked_next_change_button){
-				case(1) :
-					default_settings->next = BLACK;
-					break;
-				case(2) :
-					default_settings->next = WHITE;
-					break;
-				default:
-					break;
-				}
-				return SETTINGS_WINDOW;
-			}
 			// click on cancel_button
 			else if (is_inside_gui_tree_node(cancel_button, eventt.button.x, eventt.button.y)){
-				//return all settings to default
-				default_settings->minimax_depth = 1;
-				default_settings->color = WHITE;
-				return MAIN_WINDOW;
+				return PLAYER_SELECTION_WINDOW;
 			}
 			// click on ok_button
 			else if (is_inside_gui_tree_node(ok_button, eventt.button.x, eventt.button.y)){
 				check_castling_conditions(default_settings);
 				default_settings->is_next_checked = is_king_checked(default_settings->next, default_settings->board);
 				return GAME_WINDOW;
-			}
-			// click on set_board_button
-			else if (is_inside_gui_tree_node(set_board_button, eventt.button.x, eventt.button.y)){
-				return SET_BOARD_WINDOW;
 			}
 			// click on diff_button
 			else if (is_inside_gui_tree_node(diff_button, eventt.button.x, eventt.button.y)){
@@ -673,7 +632,7 @@ int create_set_board_window(settings *game_settings, gui_tree_node board_tools[B
 
 
 // the listener for the set board window controls
-// return the next window
+// return the next window TODO
 int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_panel, gui_tree_node *side_panel,
 	gui_tree_node *add_button, gui_tree_node *move_button, gui_tree_node *remove_button, gui_tree_node *clear_button,
 	gui_tree_node *start_button, gui_tree_node *cancel_button, gui_tree_node board_tools[BOARD_SIZE][BOARD_SIZE],
@@ -692,16 +651,19 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 			j = 7 - ((event.button.y - frame_offset) / SQUARE_SIZE);
 			cord piece_cord = { i, j };
 
-			// the cancel button was clicked -> return to main window
+			// the cancel button was clicked -> return to player selection
 			if (is_inside_gui_tree_node(cancel_button, event.button.x, event.button.y)){
-				return MAIN_WINDOW;
+				return PLAYER_SELECTION_WINDOW;
 			}
 
-			// the start button was clicked -> go to game window
+			// the start button was clicked -> go to game window or AI settings
 			else if (is_inside_gui_tree_node(start_button, event.button.x, event.button.y)){
 				check_castling_conditions(game_settings);
 				game_settings->is_next_checked = is_king_checked(game_settings->next, game_settings->board);
-				return GAME_WINDOW;
+				if (game_settings->mode == PLAYER_VS_PLAYER)
+					return GAME_WINDOW;
+				else
+					return SETTINGS_WINDOW;
 			}
 			// the clear button was clicked -> clear the board
 			else if (is_inside_gui_tree_node(clear_button, event.button.x, event.button.y)){
@@ -816,45 +778,45 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					return FALSE;
 				}
 
-				if (SDL_Flip(window->surface) != 0) {
-					fprintf(stderr, "SDL error: %s\n", SDL_GetError());
-					return FALSE;
-				}
-				return SET_BOARD_WINDOW;
+if (SDL_Flip(window->surface) != 0) {
+	fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+	return FALSE;
+}
+return SET_BOARD_WINDOW;
 
 
 			}
 
 			// add button was clicked
-			else if ((is_inside_gui_tree_node(add_button, event.button.x, event.button.y)) && is_marked){
+			else if ((is_inside_gui_tree_node(add_button, event.button.x, event.button.y)) && is_marked) {
 
 				char tool_type_to_add;
 				//selecting the tool color you wish to add (dialog)
 				int clicked_color_button = create_dialog(game_settings, 2,
 					100, 50, 0, 3767, GUI_SET);
 				// error occured
-				if (clicked_color_button == -1){
+				if (clicked_color_button == -1) {
 					return FALSE;
 				}
 				// click on cancel
-				if (clicked_color_button == 0){
+				if (clicked_color_button == 0) {
 					return SET_BOARD_WINDOW;
 					break;
 				}
-				else{
+				else {
 					//selecting the tool type you wish to add (dialog)
 					int clicked_tool_type_button = create_dialog(game_settings, 5, SQUARE_SIZE,
 						SQUARE_SIZE, (300 * (clicked_color_button - 1)), 1949, GUI_SET);
 					// error occured
-					if (clicked_tool_type_button == -1){
+					if (clicked_tool_type_button == -1) {
 						return FALSE;
 					}
 					// click on cacel
-					if (clicked_tool_type_button == 0){
+					if (clicked_tool_type_button == 0) {
 						return SET_BOARD_WINDOW;
 						break;
 					}
-					switch (clicked_tool_type_button){
+					switch (clicked_tool_type_button) {
 					case(1) :
 						tool_type_to_add = (clicked_color_button == BLACK) ? 'Q' : 'q';
 						break;
@@ -873,27 +835,27 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 					default:
 						break;
 					}
-					if (((tool_type_to_add == 'm') || (tool_type_to_add == 'M')) && ((marked_cord.y == 0) || (marked_cord.y == 7))){
-						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+					if (((tool_type_to_add == 'm') || (tool_type_to_add == 'M')) && ((marked_cord.y == 0) || (marked_cord.y == 7))) {
+						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)) {
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
 					}
 					board_piece(tmp_settings.board, marked_cord) = tool_type_to_add;
 					//check if this add is valid
-					if ((!is_valid_board(tmp_settings.board)) || is_over_max(tmp_settings.board, marked_cord)){
-						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)){
+					if ((!is_valid_board(tmp_settings.board)) || is_over_max(tmp_settings.board, marked_cord)) {
+						if (!create_popup(game_settings, 0, INVALID_SET_MESSAGE)) {
 							return FALSE;
 						}
 						return SET_BOARD_WINDOW;
 					}
-					else{ //is valid -> remove piece
+					else { //is valid -> remove piece
 						board_piece(game_settings->board, marked_cord) = tool_type_to_add;
-						if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)){
+						if (!draw_board(game_settings, game_panel, board_tools, empty_moves, FALSE, error_cord)) {
 							return FALSE;
 						}
 						SDL_WM_SetCaption("Set Board", NULL);
-						if (!draw_tree(window)){
+						if (!draw_tree(window)) {
 							return FALSE;
 						}
 
@@ -914,19 +876,19 @@ int listener_to_set_board_window(settings *game_settings, gui_tree_node *game_pa
 }
 
 // creating popup message
-int create_popup(settings *default_settings, int popup_x_location, int popup_y_location){
-
+int create_popup(settings *default_settings, int popup_x_location, int popup_y_location) {
 	gui_tree_node *panel, *last_window;
 	last_window = window;
+	int size = (popup_x_location == 1220) ? 2: 400;
 	//create panel
-	if (!create_panel(125, 250, 400, 200, window)){
+	if (!create_panel(125, 250, size, size / 2, window)){
 		free_tree(last_window);
 		window = NULL;
 		return FALSE;
 	}
 	panel = window->children.last->data;
 	//create the message label
-	if (!create_image(popup_x_location, popup_y_location, 0, 0, 400, 200, popup_img, panel)){
+	if (!create_image(popup_x_location, popup_y_location, 0, 0, size, size/2, popup_img, panel)){
 		free_tree(last_window);
 		window = NULL;
 		return FALSE;
@@ -944,7 +906,8 @@ int create_popup(settings *default_settings, int popup_x_location, int popup_y_l
 		return FALSE;
 	}
 	// set a delay of 1 sec
-	SDL_Delay(1000);
+	if (popup_x_location < 1220)
+		SDL_Delay(1000);
 	// remove the popup from the UI tree
 	node * curr_node = window->children.first;
 	while (curr_node->next->next != NULL){
@@ -1041,15 +1004,19 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		label_location_y -= 1650;
 		buttons = buttons2_img;
 	}
-	else {
+	else if (label_location_y < 10000) {
 		label_location_y -= 3000;
 		buttons = buttons3_img;
+	}
+	else {
+		label_location_y -= 10000;
+		buttons = buttons4_img;
 	}
 	int controls_panel_width = (special_dialog == 1) ? (control_width * 2) : control_width;
 	int label_hight = 100;
 	int label_width = 300;
 	int cancel_button_width = 75;
-	int cancel_button_hight = 99;
+	int cancel_button_hight = 100;
 	int window_width = label_width;
 	int window_hight = label_hight + (num_of_controls*control_hight) + cancel_button_hight - 10;
 	int selected_slot, i, j;
@@ -1087,8 +1054,8 @@ int create_dialog(settings *default_settings, int num_of_controls,
 		return -1;
 	}
 	//create the cancel button
-	if (!create_button(0, 576, (mid_panel - 48),
-		label_hight + (num_of_controls*control_hight), cancel_button_hight, cancel_button_width, buttons1_img, panel)){
+	if (!create_button(0, 0, (mid_panel - 48),
+		label_hight + (num_of_controls*control_hight), cancel_button_hight, cancel_button_width, buttons2_img, panel)){
 		free(dialog_conrtol);
 		return -1;
 	}
@@ -1110,6 +1077,12 @@ int create_dialog(settings *default_settings, int num_of_controls,
 			different_control = FALSE;
 		}
 		// create the controls
+		if (special_dialog == GUI_START) {
+			if (((i == 0) && (default_settings->mode == PLAYER_VS_COMP)) || (((i == 1) && (default_settings->next == BLACK))))
+				special_dialog_active = 400;
+			else
+				special_dialog_active = 0;
+		}
 		if (!create_button(label_location_x + special_dialog_active, label_location_y + label_hight + ((i * control_hight)*different_control),
 			special_set_active + (((controls_panel_width) / 2) - (control_width / 2)), (i * control_hight), control_width,
 																			control_hight, buttons, controls_panel)){
@@ -1138,7 +1111,10 @@ int create_dialog(settings *default_settings, int num_of_controls,
 
 	selected_slot = listener_to_dialog(dialog_conrtol, default_settings, cancel_button, controls_panel, num_of_controls,
 																											special_dialog);
-
+	if (selected_slot == -1) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		return FALSE;
+	}
 	// chekc that if an 'empty slot' is clicked -> nothing will happend
 	if (special_dialog == GUI_LOAD){
 		sprintf(slot, "saved_games/slot%d.xml", selected_slot - 1);
@@ -1178,12 +1154,13 @@ int create_dialog(settings *default_settings, int num_of_controls,
 	return selected_slot;
 }
 
-/// listener to a generic dialog
+// listener to a generic dialog
 int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *controls_panel, int num_of_controls, int special_dialog){
 	SDL_Event eventt;
 	int i;
 	int special_dialog_active = 0;
+	int click;
 	while (SDL_WaitEvent(&eventt)){
 		switch (eventt.type){
 		case(SDL_MOUSEBUTTONUP) :
@@ -1194,12 +1171,77 @@ int listener_to_dialog(gui_tree_node **dialog_conrtol, settings *default_setting
 								// if the "i"th button was clicked - return i+1
 								if (is_inside_gui_tree_node(controls_panel, eventt.button.x, eventt.button.y)){
 									for (i = 0; i < num_of_controls; i++){
-										if (special_dialog == 1){
-											//special_dialog_active = (i % 2) ? 75 : 0;
-										}
 										if (is_inside_gui_tree_node(dialog_conrtol[i], eventt.button.x - special_dialog_active,
 											eventt.button.y - special_dialog_active)){
-											return i + 1;
+											if (special_dialog != GUI_START)
+												return i + 1;
+											else {
+												if (i == 0) {
+													click = create_dialog(default_settings,2,200, 75, 0, 10000, FALSE);
+													if (click == 1) {
+														if (default_settings->mode == PLAYER_VS_PLAYER)
+															continue;
+														else {
+															default_settings->mode = PLAYER_VS_PLAYER;
+															if (!create_button(0, 425, 0,0, 200, 75, buttons1_img, controls_panel) || !(create_popup(default_settings, 1220, 1220)))
+																return -1;
+															continue;
+														}
+
+													}
+													else if (click == 2) {
+														if (default_settings->mode == PLAYER_VS_COMP)
+															continue;
+														else {
+															default_settings->mode = PLAYER_VS_COMP;
+															if (!create_button(400, 425, 0, 0, 200, 75, buttons1_img, controls_panel) || !(create_popup(default_settings, 1220, 1220)))
+																return -1;
+															continue;
+														}
+
+													}
+													
+												}
+												else if (i == 1) {
+													click = create_dialog(default_settings, 2,
+														100, 50, 0, 3767, GUI_SET);
+													// error occured
+													if (click == -1)
+														return -1;
+													//click on cancel
+													if (click == 0)
+														continue;
+													if (click == 1) {
+														if (default_settings->next == BLACK)
+															continue;
+														else {
+															default_settings->next = BLACK;
+															if (!(create_button(400, 500, 0, 75, 200, 75, buttons1_img, controls_panel)) || !(create_popup(default_settings,1220, 1220)))
+																return -1;
+															continue;
+														}	
+													}
+													if (click == 2) {
+														if (default_settings->next == WHITE)
+															continue;
+														else {
+															default_settings->next = WHITE;
+															if ((!create_button(0, 500, 0, 75, 200, 75, buttons1_img, controls_panel)) || !(create_popup(default_settings, 1220, 1220)))
+																return -1;
+															continue;
+														}
+													}
+												}
+												else if (i == 2) {
+													return SET_BOARD_WINDOW;
+												}
+												else if (i == 3) {
+													if (default_settings->mode == PLAYER_VS_COMP)
+														return SETTINGS_WINDOW;
+													else
+														return GAME_WINDOW;
+												}
+											}
 										}
 									}
 								}
@@ -1356,6 +1398,7 @@ int draw_board(settings *game_settings, gui_tree_node *panel, gui_tree_node boar
 	moves possible_moves, int is_comp, cord single_cord){
 	int i, j;
 	int number_of_castling = how_many_castling(possible_moves);
+
 	int board_frame = 0;
 	int comp_turn = (is_comp) ? ACTIVE : UNACTIVE;
 	move *curr_move = NULL;
@@ -1663,7 +1706,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 		}
 	}
 	while (SDL_WaitEvent(&event)) {
-		if ((game_settings->mode == PLAYER_VS_PLAYER) || (game_settings->next == game_settings->color)){
 		switch (event.type) {
 		case(SDL_MOUSEBUTTONUP) :
 			//check if there was a click on the game panel
@@ -1872,7 +1914,7 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			//click on save control
 			else if (is_inside_gui_tree_node(save_button, event.button.x, event.button.y)) {
 				//clicked_button can return: 0 = cancel was clicked, [1...] = the [i+1....]th save\load slots 
-				int clicked_button = create_dialog(game_settings, NUM_OF_MEMORY_SLOTS, 200, 50, 600, 1200, GUI_SAVE);
+				int clicked_button = create_dialog(game_settings, NUM_OF_MEMORY_SLOTS, 200, 50, 600, 1425, GUI_SAVE);
 				if (clicked_button == -1) {// error occured
 					free_list(&all_possible_moves, free);
 					return FALSE;
@@ -1963,7 +2005,6 @@ int listener_to_game_window(settings *game_settings, gui_tree_node *game_panel, 
 			break;
 		}
 	}
-	}
 	free_list(&all_possible_moves, free);
 	return FALSE;
 }
@@ -2042,9 +2083,16 @@ int user_turn_mark_possible_moves(settings *game_settings, gui_tree_node *game_p
 int mark_castle(gui_tree_node *board_panel, move *curr_move, int number_of_castling){
 	int frame_offset = 33;
 	int castling_frame = 0;
-	if (curr_move->is_castle != TRUE)
+	if (number_of_castling == 0) {
+		if (!create_image(0, 720 + (frame_offset * castling_frame), 33, 633, 600, 33, board_img, board_panel)||
+			!create_image(0, 720 + (frame_offset * castling_frame), 33, 0, 600, 33, board_img, board_panel)){
+			return FALSE;
+		}
 		return TRUE;
-	if (curr_move->start.y == 0){
+	}
+	else if (curr_move->is_castle != TRUE)
+		return TRUE;
+	else if (curr_move->start.y == 0){
 		//right side castle
 		if (curr_move->start.x == 7)
 			castling_frame = 1;

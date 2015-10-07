@@ -32,19 +32,20 @@
 #define GUI_SAVE 3
 #define GUI_LOAD 2
 #define GUI_SET 1
+#define GUI_START -42
 
 /***********************/
 /**** LIST OF FUNCS ****/
 /***********************/
 int gui_mode();
 int create_opening_popup();
-int create_main_window(settings *default_settings);
+int create_main_window(settings *default_settings, int popup);
 int create_settings_window(settings *default_settings);
 int listener_to_Settings_window(settings *default_settings, gui_tree_node *diff_change_button,
-	gui_tree_node *ok_button, gui_tree_node *cancel_button, gui_tree_node *next_player_change_button,
-	gui_tree_node *color_change_button, gui_tree_node *set_board_button);
-int create_main_window();
-int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_button, gui_tree_node *load_game_button, gui_tree_node *quit_button);
+	gui_tree_node *ok_button, gui_tree_node *cancel_button,
+	gui_tree_node *color_change_button);
+int listener_to_main_window(settings *default_settings, gui_tree_node *new_game_button,
+	gui_tree_node *load_game_button, gui_tree_node *quit_button);
 int listener_to_load_save_window(gui_tree_node *slot[4], settings *default_settings,
 	gui_tree_node *cancel_button, gui_tree_node *set_board_button, int is_save);
 int create_load_window(settings *default_settings);

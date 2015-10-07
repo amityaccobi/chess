@@ -965,14 +965,81 @@ double minimax(settings set, double alpha, double beta, int is_maxi_player, int 
 }
 
 int get_best_depth(settings * set, int player) {
-	int board_score = score(set, player, player, FALSE);
-	if (board_score == 0)
-		return 4;
-	else if (board_score > 0)
-		return 3;
-	else
-		return 2;
-}
+	int max_next_steps = 0;
+	int max_other_steps = 0;
+	int piece_steps;
+	char piece;
+	int color;
+	int depth = 0;
+	int max = 1000000;
+	int total_boards;
+	cord crd;
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		crd.x = i;
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				crd.y = j;
+				piece = board_piece(set->board, crd);
+				color = which_color(piece);
+				switch (tolower(piece)){
+				case(PAWN) :
+					piece_steps = 1;
+					cord pawn_dest;
+					pawn_dest.y = (color == WHITE) ? 1 : -1;
+					pawn_dest.y += crd.y;
+					int to_add = TRUE;
+					for (int l = -1; l <= 1; l++) {
+						pawn_dest.x = l;
+						if ((which_color(board_piece(set->board, pawn_dest)) == -1) && (l == 0))
+							to_add = FALSE;
+						else if ((which_color(board_piece(set->board, pawn_dest)) != color) && (l != 0))
+							to_add = FALSE;
+					}
+					if (to_add) {
+						piece_steps = 0;
+					}
+					else if (((color == WHITE) && (j>4)) || ((color == BLACK) && (j < 4)))
+						piece_steps = 5;
+
+					break;
+				case ROOK :
+					piece_steps = 6;
+					break;
+				case(BISHOP) :
+					piece_steps = 3;
+					break;
+				case(KNIGHT) :
+					piece_steps = 3;
+					break;
+				case(QUEEN) :
+					piece_steps = 10;
+					break;
+				case(KING) :
+					piece_steps = 3;
+					break;
+				default:
+					piece_steps = 0;
+					break;
+			}
+				if (color == player)
+					max_next_steps += piece_steps;
+				else
+					max_other_steps += piece_steps;
+	}
+		
+	}
+	total_boards = 1;
+	while (TRUE) {
+		total_boards *= max_next_steps;
+		if (total_boards > max)
+			break;
+		depth++;
+		total_boards *= max_other_steps;
+		if (total_boards > max)
+			break;
+		depth++;
+	}
+	return depth;
+	}
 
 int can_piece_move(settings * set, cord piece) {
 	moves possible_moves;
@@ -995,6 +1062,8 @@ int can_piece_move(settings * set, cord piece) {
 * scoring_player = color of the minimax-maximizer player
 * current_player = color of the player whose turn it is now.
 *
+*The argument is_best determines whether bonuses should be added to the score.
+*
 * the function returns:
 *				WIN_SCORE if scoring_player wins this board
 *				LOSE_SCORE if scoring_player loses this board
@@ -1010,12 +1079,16 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 	int no_other_king = TRUE;
 	int can_move;
 	int player_score = 0;
+	int bad_pawns = 0;
 	int other_player_score = 0;
 	int is_scoring_piece;
 	int is_scoring_checked = is_king_checked(current_player, set->board);
 	int is_other_checked = is_king_checked(other_player(current_player), set->board);
 	int moves_bonus; //bonus for best difficulty
+	int i, j;
 	moves next_moves;
+
+	next_moves.len = 0;
 
 	if (is_best) {
 		next_moves = make_all_moves(set);
@@ -1029,15 +1102,28 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 			return SCORE_ERROR;
 		moves_bonus -= next_moves.len;
 		set->next = other_player(set->next);
-		moves_bonus /= 6;
+		moves_bonus /= 10;
 		moves_bonus *= (scoring_player == current_player) ? 1 : -1;
 		free_list(&next_moves, free);
 	}
 	else
 		moves_bonus = 0; // bonus only in BEST difficulty
 
-	for (int i = 0; i < BOARD_SIZE; i++){
-		for (int j = 0; j < BOARD_SIZE; j++){
+	if (is_best) { //another BEST bonus
+		cord c0;
+		for (i = 3; i <= 4; i++) {
+			for (j = 3; j <= 4; j++) {
+				c0.x = i;
+				c0.y = j;
+				player_score += is_cord_checked(c0, scoring_player, set->board);
+				other_player_score += is_cord_checked(c0, other_player(scoring_player), set->board);
+			}
+		}
+	}
+
+
+	for ( i = 0; i < BOARD_SIZE; i++){
+		for ( j = 0; j < BOARD_SIZE; j++){
 			piece.x = i;
 			piece.y = j;
 			char cur_piece = board_piece(set->board, piece);
@@ -1052,6 +1138,25 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 				no_scoring_king = (no_scoring_king && !is_scoring_piece);
 				no_other_king = (no_other_king && is_scoring_piece);
 			}
+			if ((piece_score == PAWN_SCORE)&&is_best) {
+				cord pawn_dest;
+				pawn_dest.y = (piece_color == WHITE) ? 1 : -1;
+				pawn_dest.y += piece.y;
+				int to_add = TRUE;
+				for (int l = -1; l <= 1; l++) {
+					pawn_dest.x = l;
+					if ((which_color(board_piece(set->board, piece)) == -1) && (l == 0))
+						to_add = FALSE;
+					else if ((which_color(board_piece(set->board, piece)) != piece_color) && (l != 0))
+						to_add = FALSE;
+				}
+				if (to_add) {
+					if (piece_color == scoring_player)
+						bad_pawns += 1;
+					else
+						bad_pawns -= 1;
+				}
+			}
 			if (is_scoring_piece)
 				player_score += piece_score;
 			else //piece_color is other player's color
@@ -1063,8 +1168,9 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 			if ((no_player_moves && (piece_color == current_player)) ||
 				(no_other_moves && (piece_color == other_player(current_player)))) {
 				can_move = can_piece_move(set, piece);
-				if (can_move == -1)
+				if (can_move == -1) {
 					return SCORE_ERROR;
+				}
 				else if (can_move) {
 					if (piece_color == current_player)
 						no_player_moves = FALSE;
@@ -1074,6 +1180,7 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 			}
 		}
 	}
+	bad_pawns /= 2;
 	// current_player cannot play.
 	if (no_player_moves) {
 		if (is_scoring_checked) // checkmate
@@ -1096,7 +1203,7 @@ int score(settings * set, int scoring_player, int current_player, int is_best) {
 		total_score = WIN_SCORE;
 	// both players' kings are alive and pining for the fjords
 	else
-		total_score = player_score - other_player_score + moves_bonus;
+		total_score = player_score - other_player_score + moves_bonus - bad_pawns;
 	return total_score;
 }
 
