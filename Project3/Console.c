@@ -255,9 +255,11 @@ settings settings_state() {
 		else if is_command_with_args(LOAD) {
 			if (!load_game(args, &temp_settings))
 				print_message(WRONG_FILE_NAME);
-			else if (!print_board(temp_settings.board))
-				exit(0);
-			game_settings = temp_settings;
+			else {
+				game_settings = temp_settings;
+				if (!print_board(temp_settings.board))
+					exit(0);
+			}
 		}
 
 		// parse: clear
